@@ -180,8 +180,8 @@ contract ERC20 is Context, IERC20, ISeed, Owned{
         return true;
     }
 
-    //function mint(address account, uint256 amount) public virtual override mintable returns(bool){
-    function mint(address account, uint256 amount) public virtual override returns(bool){
+    function mint(address account, uint256 amount) public virtual override mintable returns(bool){
+    //function mint(address account, uint256 amount) public virtual override returns(bool){
         _mint(account, amount);
         return true;
     }

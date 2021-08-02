@@ -11,14 +11,14 @@ contract Treasury is Owned, ITreasury {
     using SafeMath for uint256;
 
     address public seedToken;
-    uint256 USER_DEFULT_AMOUNT = 400;
-    uint256 TREASURY_DEFAULT_AMOUNT = 100;
+    uint256 USER_DEFULT_AMOUNT = 950;
+    uint256 TREASURY_DEFAULT_AMOUNT = 50; // 5% distributed
     constructor(address _seed) {
         seedToken = _seed;
     }
 
-    //function Mint(address verifier, address receiver) public mintable override returns(bool){
-    function Mint(address verifier, address receiver) public override returns(bool){
+    function Mint(address verifier, address receiver) public mintable override returns(bool){
+    //function Mint(address verifier, address receiver) public override returns(bool){
         if(verifier==address(0)) {
             ISeed(seedToken).mint( receiver, USER_DEFULT_AMOUNT * (10 ** 18));
             ISeed(seedToken).mint( address(this), TREASURY_DEFAULT_AMOUNT * (10 ** 18));
