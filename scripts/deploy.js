@@ -25,6 +25,13 @@ async function main() {
   await treasury.deployed();
   console.log("Treasury deployed to:", treasury.address);
 
+  const accounts = await hre.ethers.getSigners();
+  const signer = accounts[0];
+  const seedlist = new hre.ethers.Contract(seeder.address, Seeder.interface, signer)
+
+  let transactionResponse = await seedlist.addMinter(treasury.address);
+  let receipt = await transactionResponse.wait(1)
+  console.log("set minter for seedlist token finished");
 }
 
 // We recommend this pattern to be able to use async/await everywhere

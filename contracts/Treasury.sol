@@ -11,8 +11,8 @@ contract Treasury is Owned, ITreasury {
     using SafeMath for uint256;
 
     address public seedToken;
-    unit256 MINTABLE_AMOUNT = 2100000000000000000000; //bytes: 11100011101011101011010101110011011100100100000010100000000000000000000
-    uint256 DIV_AMOUNT = 21210000000000000000000000;
+    uint256 MINTABLE_AMOUNT = 2100000000000000000000; //bytes: 11100011101011101011010101110011011100100100000010100000000000000000000
+    uint256 DIV_AMOUNT =      21210000000000000000000000;
     constructor(address _seed) {
         seedToken = _seed;
     }
@@ -23,9 +23,9 @@ contract Treasury is Owned, ITreasury {
                 return true;
             }
 
-            uint256 totalSuppley = IERC20(seedToken).totalSupply();
+            uint256 totalSupply = IERC20(seedToken).totalSupply();
 
-            if(totalSuppley>=DIV_AMOUNT && totalSuppley % DIV_AMOUNT == 0){
+            if(totalSupply>=DIV_AMOUNT && totalSupply % DIV_AMOUNT == 0){
                 MINTABLE_AMOUNT = MINTABLE_AMOUNT>>1;
                 if(MINTABLE_AMOUNT==0){
                     ISeed(seedToken).mint(address(this), 210000000000000000000000);
