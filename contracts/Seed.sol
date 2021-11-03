@@ -20,7 +20,7 @@ contract ERC20 is Context, IERC20, ISeed, Owned{
     string private _symbol;
     uint8 private _decimals;
 
-    uint256 constant MAX_SUPPLY = 1000000000000000000000000000;
+    uint256 constant MAX_SUPPLY = 1505910000 * (10**18);
     /**
      * @dev Sets the values for {name} and {symbol}, initializes {decimals} with
      * a default value of 18.
@@ -36,16 +36,8 @@ contract ERC20 is Context, IERC20, ISeed, Owned{
         _decimals = 18;
     }
 
-    // True if transfers are allowed
-    bool public transferable = true;
-
-    modifier canTransfer() {
-        require(transferable == true);
-        _;
-    }
-
-    function setTransferable(bool _transferable) public virtual onlyOwner {
-        transferable = _transferable;
+    function maxSupply() external view override returns(uint256){
+        return MAX_SUPPLY;
     }
     /**
      * @dev Returns the name of the token.
@@ -101,7 +93,7 @@ contract ERC20 is Context, IERC20, ISeed, Owned{
      * - `recipient` cannot be the zero address.
      * - the caller must have a balance of at least `amount`.
      */
-    function transfer(address recipient, uint256 amount) public virtual override canTransfer returns (bool) {
+    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
         _transfer(_msgSender(), recipient, amount);
         return true;
     }
@@ -138,7 +130,7 @@ contract ERC20 is Context, IERC20, ISeed, Owned{
      * - the caller must have allowance for ``sender``'s tokens of at least
      * `amount`.
      */
-    function transferFrom(address sender, address recipient, uint256 amount) public virtual override canTransfer returns (bool) {
+    function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool) {
         _transfer(sender, recipient, amount);
         _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "ERC20: transfer amount exceeds allowance"));
         return true;
@@ -186,11 +178,6 @@ contract ERC20 is Context, IERC20, ISeed, Owned{
         return true;
     }
 
-    function burn(address account, uint256 amount) public virtual onlyOwner returns (bool){
-        _burn(account, amount);
-        return true;
-    }
-
     /**
      * @dev Moves tokens `amount` from `sender` to `recipient`.
      *
@@ -233,27 +220,6 @@ contract ERC20 is Context, IERC20, ISeed, Owned{
         _totalSupply = _totalSupply.add(amount);
         _balances[account] = _balances[account].add(amount);
         emit Transfer(address(0), account, amount);
-    }
-
-    /**
-     * @dev Destroys `amount` tokens from `account`, reducing the
-     * total supply.
-     *
-     * Emits a {Transfer} event with `to` set to the zero address.
-     *
-     * Requirements:
-     *
-     * - `account` cannot be the zero address.
-     * - `account` must have at least `amount` tokens.
-     */
-    function _burn(address account, uint256 amount) internal virtual {
-        require(account != address(0), "ERC20: burn from the zero address");
-
-        _beforeTokenTransfer(account, address(0), amount);
-
-        _balances[account] = _balances[account].sub(amount, "ERC20: burn amount exceeds balance");
-        _totalSupply = _totalSupply.sub(amount);
-        emit Transfer(account, address(0), amount);
     }
 
     /**
@@ -308,6 +274,5 @@ contract ERC20 is Context, IERC20, ISeed, Owned{
 contract SeedToken is ERC20 {
 
     constructor() ERC20("Seedlist Network", "Seed") public {
-        //_mint(msg.sender, 0 * (10 ** uint256(decimals())));
     }
 }

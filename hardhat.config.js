@@ -49,7 +49,12 @@ module.exports = {
     rinkeby: {
       url: `${infura_url}`,
       accounts: [`${privkey}`]
-    }
+    },
+      arbitrum:{
+        url: "https://rinkeby.arbitrum.io/rpc",
+        accounts: [`${privkey}`]
+
+      }
   },
   // usage: https://www.npmjs.com/package/@nomiclabs/hardhat-etherscan
   etherscan: {
