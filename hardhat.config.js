@@ -43,6 +43,14 @@ module.exports = {
                     }
                 }
             },
+             "contracts/interfaces/IRegistry.sol":{
+                 version:"0.8.2",
+                 settings:{
+                     optimizer: {
+                         enabled: true,
+                     }
+                 }
+             },
          }
       },
   networks: {

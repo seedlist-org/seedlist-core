@@ -20,14 +20,15 @@ async function main() {
   console.log("SeedToken deployed to:", seeder.address);
 
 
+  let registry_addr = "0x74c5dc1bB65e1Dbc5a36C3ebF6863c53122b9592";
   const Treasury = await hre.ethers.getContractFactory("Treasury");
-  const treasury = await Treasury.deploy(seeder.address);
+  const treasury = await Treasury.deploy(seeder.address, registry_addr);
   await treasury.deployed();
   console.log("Treasury deployed to:", treasury.address);
 
   const accounts = await hre.ethers.getSigners();
   const signer = accounts[0];
-  const seedlist = new hre.ethers.Contract(seeder.address, Seeder.interface, signer)
+  const seedlist = new hre.ethers.Contract(seeder.address, Seeder.interface, signer);
 
   let transactionResponse = await seedlist.addMinter(treasury.address);
   let receipt = await transactionResponse.wait(1)
