@@ -26,37 +26,87 @@ module.exports = {
       {
         compilers:[
             {
-                version:"0.6.6",
+                version:"0.8.12",
                 settings:{
+	                evmVersion:"istanbul",
                     optimizer:{
                         enabled:true,
                     }
                 },
             }
         ],
-         overrides:{
-            "contracts/Treasury.sol":{
-                version:"0.8.2",
+/*         overrides:{
+	         "contracts/Seed.sol":{
+		         version:"0.8.12",
+		         settings:{
+			         evmVersion:"istanbul",
+			         optimizer: {
+				         enabled: true,
+			         }
+		         }
+	         },
+	         "contracts/Treasury.sol":{
+		         version:"0.8.12",
                 settings:{
-                    optimizer: {
+	                evmVersion:"istanbul",
+	                optimizer: {
                         enabled: true,
                     }
                 }
             },
-             "contracts/interfaces/IRegistry.sol":{
-                 version:"0.8.2",
+	         "contracts/interfaces/ITreasury.sol":{
+		         version:"0.8.12",
+		         settings:{
+			         evmVersion:"istanbul",
+			         optimizer: {
+				         enabled: true,
+			         }
+		         }
+	         },
+	         "contracts/vaults/interfaces/ITreasury.sol":{
+		         version:"0.8.12",
+		         settings:{
+			         evmVersion:"istanbul",
+			         optimizer: {
+				         enabled: true,
+			         }
+		         }
+	         },
+	         "contracts/vaults/interfaces/IVaultHub.sol":{
+		         version:"0.8.12",
+		         settings:{
+			         evmVersion:"istanbul",
+			         optimizer: {
+				         enabled: true,
+			         }
+		         }
+	         },
+	         "contracts/vaults/PrivateVault.sol":{
+		         version:"0.8.12",
+		         settings:{
+			         evmVersion:"istanbul",
+			         optimizer: {
+				         enabled: true,
+			         }
+		         }
+	         },
+	         "contracts/vaults/VaultHub.sol":{
+		         version:"0.8.12",
                  settings:{
+	                 evmVersion:"istanbul",
                      optimizer: {
                          enabled: true,
                      }
                  }
-             },
-         }
+             }
+         }*/ // end override
       },
   networks: {
     rinkeby: {
       url: `${infura_url}`,
-      accounts: [`${privkey}`]
+      accounts: [`${privkey}`],
+	  gas: 21000000,
+	  gasPrice: 8000000000
     },
       arbitrum:{
         url: "https://rinkeby.arbitrum.io/rpc",

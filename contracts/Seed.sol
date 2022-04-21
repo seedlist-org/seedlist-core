@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >= 0.6.6;
+pragma solidity >= 0.8.12;
 
 import "./Context.sol";
 import "./interfaces/IERC20.sol";
-import "./interfaces/ISeed.sol";
-import "./Owned.sol";
 import "./libraries/SafeMath.sol";
+import "./interfaces/ISeed.sol";
 
-contract ERC20 is Context, IERC20, ISeed, Owned{
+contract ERC20 is Context, IERC20, ISeed{
     using SafeMath for uint256;
 
+    address public owner;
+    address public minter;
+    bool public minted;
     mapping (address => uint256) private _balances;
 
     mapping (address => mapping (address => uint256)) private _allowances;
@@ -20,25 +22,40 @@ contract ERC20 is Context, IERC20, ISeed, Owned{
     string private _symbol;
     uint8 private _decimals;
 
-    uint256 constant MAX_SUPPLY = 1505910000 * (10**18);
+    /*
+        Satoshi Nakamoto last said "I am not Dorian Nakamoto." at 03/07/2014 on
+         http://p2pfoundation.ning.com/forum/topics/bitcoin-open-source?commentId=2003008%3AComment%3A52186
+    */
+    uint256 constant MAX_SUPPLY = 1403070000 * (10**18);
     /**
      * @dev Sets the values for {name} and {symbol}, initializes {decimals} with
      * a default value of 18.
      *
-     * To select a different value for {decimals}, use {_setupDecimals}.
-     *
      * All three of these values are immutable: they can only be set once during
      * construction.
      */
-    constructor (string memory name_, string memory symbol_) public {
+    constructor (string memory name_, string memory symbol_) {
         _name = name_;
         _symbol = symbol_;
         _decimals = 18;
+        owner = msg.sender;
+        minted = false;
     }
 
-    function maxSupply() external view override returns(uint256){
-        return MAX_SUPPLY;
+    function setMinter(address _minter) external {
+        require(minted == false, "SeedToken: minter has been set");
+        require(_minter != address(0), "SeedToken: address is ZERO");
+        require(msg.sender == owner,"SeedToken: only onwer can setting");
+        minter = _minter;
+        minted = true;
     }
+
+    modifier mintable {
+        require(minted == true, "SeedToken: minted is invalid");
+        require(msg.sender==minter, "SeedToken: only Minter can do it");
+        _;
+    }
+
     /**
      * @dev Returns the name of the token.
      */
@@ -58,10 +75,6 @@ contract ERC20 is Context, IERC20, ISeed, Owned{
      * @dev Returns the number of decimals used to get its user representation.
      * For example, if `decimals` equals `2`, a balance of `505` tokens should
      * be displayed to a user as `5,05` (`505 / 10 ** 2`).
-     *
-     * Tokens usually opt for a value of 18, imitating the relationship between
-     * Ether and Wei. This is the value {ERC20} uses, unless {_setupDecimals} is
-     * called.
      *
      * NOTE: This information is only used for _display_ purposes: it in
      * no way affects any of the arithmetic of the contract, including
@@ -101,8 +114,8 @@ contract ERC20 is Context, IERC20, ISeed, Owned{
     /**
      * @dev See {IERC20-allowance}.
      */
-    function allowance(address owner, address spender) public view virtual override returns (uint256) {
-        return _allowances[owner][spender];
+    function allowance(address _owner, address spender) public view virtual override returns (uint256) {
+        return _allowances[_owner][spender];
     }
 
     /**
@@ -235,23 +248,12 @@ contract ERC20 is Context, IERC20, ISeed, Owned{
      * - `owner` cannot be the zero address.
      * - `spender` cannot be the zero address.
      */
-    function _approve(address owner, address spender, uint256 amount) internal virtual {
-        require(owner != address(0), "ERC20: approve from the zero address");
+    function _approve(address _owner, address spender, uint256 amount) internal virtual {
+        require(_owner != address(0), "ERC20: approve from the zero address");
         require(spender != address(0), "ERC20: approve to the zero address");
 
-        _allowances[owner][spender] = amount;
-        emit Approval(owner, spender, amount);
-    }
-
-    /**
-     * @dev Sets {decimals} to a value other than the default one of 18.
-     *
-     * WARNING: This function should only be called from the constructor. Most
-     * applications that interact with token contracts will not expect
-     * {decimals} to ever change, and may work incorrectly if it does.
-     */
-    function _setupDecimals(uint8 decimals_) internal virtual {
-        _decimals = decimals_;
+        _allowances[_owner][spender] = amount;
+        emit Approval(_owner, spender, amount);
     }
 
     /**
@@ -272,7 +274,6 @@ contract ERC20 is Context, IERC20, ISeed, Owned{
 }
 
 contract SeedToken is ERC20 {
-
-    constructor() ERC20("Seedlist Network", "Seed") public {
+    constructor() ERC20("Seedlist Network", "Seed") {
     }
 }
