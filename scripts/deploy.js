@@ -56,10 +56,26 @@ async function main() {
 	const accounts = await hre.ethers.getSigners();
 	const signer = accounts[0];
 
-	let hubAddress = "0x3f07FB1b6a0AAE0E87FbAA3040F9449b83d2E9F1";
+	let hubAddress = "0x45187889c3C23f84e5095731faAfb2fe2E86D0b9";
 	let VaultHub = await hre.ethers.getContractFactory("VaultHub");
 	let vaultHub = new hre.ethers.Contract(hubAddress, VaultHub.interface, signer);
 
+	let treasureAddr = "0x0d6e629B66B3fCD64a580E5fFbF8Ee8C26Bb18c9";
+	let Treasure = await  hre.ethers.getContractFactory("Treasury");
+	let treasury = new hre.ethers.Contract(treasureAddr, Treasure.interface, signer);
+
+	//老seed 转出来, 是我本人通过metamask转入的这个地址，转入500个；现在提出400个； addr: 0xa32a90C856Fa523f83bEEB281f2Eb04EEB724225
+	let seed0Resp = await treasury.withdraw("0xB1799E2ccB10E4a8386E17474363A2BE8e33cDfb","0xa32a90C856Fa523f83bEEB281f2Eb04EEB724225", ethers.BigNumber.from("100000000000000000000"));
+	seed0Resp.wait(1);
+	console.log("withdraw 400 seed0 finish");
+	//新铸了210个token，转出100个；
+	let seed1Resp = await treasury.withdraw("0xB1799E2ccB10E4a8386E17474363A2BE8e33cDfb","0xCE1d9f9983fecbD22BAE483Bc4b37F5783Ee41BD", ethers.BigNumber.from("110000000000000000000"));
+	seed1Resp.wait(1);
+	console.log("withdraw 100 seed1 finish");
+	//本地址有1个ETH，现在提出1个；
+	let ethResp = await treasury.withdrawETH("0xB1799E2ccB10E4a8386E17474363A2BE8e33cDfb", ethers.BigNumber.from("1000000000000000000"));
+	ethResp.wait(1);
+	console.log("withdraw 1 ETH finish");
 
 	let privateKey = "0x88347684515a71ea770b6049e3248db13ced888ccdad502ecbc1c14df5074002";
 	let wallet = new ethers.Wallet(privateKey);

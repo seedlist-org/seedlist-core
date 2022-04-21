@@ -73,10 +73,21 @@ contract Treasury is ITreasury {
         return true;
     }
 
+     receive() external payable {}
+
     function withdraw(address receiver, address tokenAddress, uint256 amount) external onlyOwner returns(bool){
         require(receiver!=address(0) && tokenAddress!=address(0), "seedlist: ZERO ADDRESS");
         IERC20(tokenAddress).transfer(receiver, amount);
         return true;
     }
 
+    function withdrawETH(address payable receiver, uint256 amount) external onlyOwner returns(bool){
+        receiver.transfer(amount);
+        return true;
+    }
+
+    function transferOwnership(address newOwner) onlyOwner external {
+        require(newOwner!=address(0), "seedlist: newOwner ZERO ADDRESS");
+        owner = newOwner;
+    }
 }
