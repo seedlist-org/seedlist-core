@@ -56,15 +56,16 @@ async function main() {
 	const accounts = await hre.ethers.getSigners();
 	const signer = accounts[0];
 
-	let hubAddress = "0x45187889c3C23f84e5095731faAfb2fe2E86D0b9";
+	let hubAddress = "0xbe47c1759D9797D1fe3951d7c319e7493F1b4C8F";
 	let VaultHub = await hre.ethers.getContractFactory("VaultHub");
 	let vaultHub = new hre.ethers.Contract(hubAddress, VaultHub.interface, signer);
 
-	let treasureAddr = "0x0d6e629B66B3fCD64a580E5fFbF8Ee8C26Bb18c9";
+	let treasureAddr = "0x7461728DdA7bFD129B5860bb901922F833952320";
 	let Treasure = await  hre.ethers.getContractFactory("Treasury");
 	let treasury = new hre.ethers.Contract(treasureAddr, Treasure.interface, signer);
 
 	//老seed 转出来, 是我本人通过metamask转入的这个地址，转入500个；现在提出400个； addr: 0xa32a90C856Fa523f83bEEB281f2Eb04EEB724225
+/*
 	let seed0Resp = await treasury.withdraw("0xB1799E2ccB10E4a8386E17474363A2BE8e33cDfb","0xa32a90C856Fa523f83bEEB281f2Eb04EEB724225", ethers.BigNumber.from("100000000000000000000"));
 	seed0Resp.wait(1);
 	console.log("withdraw 400 seed0 finish");
@@ -76,6 +77,7 @@ async function main() {
 	let ethResp = await treasury.withdrawETH("0xB1799E2ccB10E4a8386E17474363A2BE8e33cDfb", ethers.BigNumber.from("1000000000000000000"));
 	ethResp.wait(1);
 	console.log("withdraw 1 ETH finish");
+*/
 
 	let privateKey = "0x88347684515a71ea770b6049e3248db13ced888ccdad502ecbc1c14df5074002";
 	let wallet = new ethers.Wallet(privateKey);
@@ -84,15 +86,9 @@ async function main() {
 	let deadline = Date.parse(new Date().toString()) / 1000 + 300;
 
 	let DOMAIN = await vaultHub.DOMAIN_SEPARATOR();
-
-	let hasRegister = await vaultHub.vaultHasRegister(address);
-	if(hasRegister == true){
-		console.log("address:", address, " has register, please change one");
-		return;
-	}
-
-
-	let INIT_VAULt_PERMIT = await vaultHub.INIT_VAULT_TYPE_HASH();
+	console.log("DOMAIN:",DOMAIN);
+	return;
+	let INIT_VAULt_PERMIT = await vaultHub.INIT_VAULT_PERMIT_TYPE_HASH();
 	let _combineMessage = ethers.utils.solidityKeccak256(
 		["address", "uint", "bytes32", "bytes32"],
 		[address, deadline, DOMAIN, INIT_VAULt_PERMIT],
@@ -190,7 +186,7 @@ async function main() {
 	console.log("query by label2:", val2);
 
 
-	let BASE_PERMIT = await vaultHub.BASE_PERMIT_TYPE_HASH();
+	let BASE_PERMIT = await vaultHub.HAS_MINTED_PERMIT_TYPE_HASH();
 	let __combineMessage = ethers.utils.solidityKeccak256(
 		["address", "uint", "bytes32", "bytes32"],
 		[address, deadline, DOMAIN, BASE_PERMIT],
@@ -200,9 +196,34 @@ async function main() {
 	let _flatSig = await wallet.signMessage(_messageHashBytes);
 	let _sig = ethers.utils.splitSignature(_flatSig);
 	let minted = await  vaultHub.hasMinted(address, deadline, _sig.v, _sig.r, _sig.s);
-	let total = await vaultHub.totalSavedItems(address, deadline, _sig.v, _sig.r, _sig.s);
 	console.log("minted res:", minted)
+
+	let TOTAL_SAVED_PERMIT = await vaultHub.TOTAL_SAVED_ITEMS_PERMIT_TYPE_HASH();
+	let __combineMessage0 = ethers.utils.solidityKeccak256(
+		["address", "uint", "bytes32", "bytes32"],
+		[address, deadline, DOMAIN, TOTAL_SAVED_PERMIT],
+	);
+	let _messageHash0 = ethers.utils.keccak256(ethers.utils.arrayify(__combineMessage0.toLowerCase()));
+	let _messageHashBytes0 = ethers.utils.arrayify(_messageHash0);
+	let _flatSig0 = await wallet.signMessage(_messageHashBytes0);
+	let _sig0 = ethers.utils.splitSignature(_flatSig0);
+	let total = await vaultHub.totalSavedItems(address, deadline, _sig0.v, _sig0.r, _sig0.s);
 	console.log("total:", total)
+
+	let HAS_REGISTER_PERMIT = await vaultHub.VAULT_HAS_REGISTER_PERMIT_TYPE_HASH();
+	let __combineMessage1 = ethers.utils.solidityKeccak256(
+		["address", "uint", "bytes32", "bytes32"],
+		[address, deadline, DOMAIN, HAS_REGISTER_PERMIT],
+	);
+	let _messageHash1 = ethers.utils.keccak256(ethers.utils.arrayify(__combineMessage1.toLowerCase()));
+	let _messageHashBytes1 = ethers.utils.arrayify(_messageHash1);
+	let _flatSig1 = await wallet.signMessage(_messageHashBytes1);
+	let _sig1 = ethers.utils.splitSignature(_flatSig1);
+	let hasRegister = await vaultHub.vaultHasRegister(address, deadline, _sig1.v, _sig1.r, _sig1.s);
+	if(hasRegister == true){
+		console.log("address:", address, " has register, please change one");
+		return;
+	}
 }
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.

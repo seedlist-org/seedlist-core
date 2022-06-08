@@ -32,19 +32,28 @@ contract VaultHub is IVaultHub {
     // string memory cryptoLabel, uint deadline)');
     bytes32 public constant SAVE_PERMIT_TYPE_HASH = 0xd13e83bcf4fce4727bb85a65a6934ff2f1d0e8c4fd78e9aec10a9ec368be85d0;
 
-    //keccak256('queryPrivateDataByIndex(address addr, uint16 index, uint deadline)')
+    //keccak256('queryPrivateDataByIndex(address addr, uint64 index, uint deadline)')
     bytes32 public constant INDEX_QUERY_PERMIT_TYPE_HASH =
-        0x823bd930c30b1432beb830612465780ab6dd71a4e3fa2bfff20271dc3753be81;
+        0x46104079641008f73d549d958985fcf7fbbc01bd836d18b08a6adb8a3364a833;
 
     //keccak256('queryPrivateDataByName(address addr, string memory label, uint deadline)')
     bytes32 public constant NAME_QUERY_PERMIT_TYPE_HASH =
         0xe024d3867535747968844166b70261c903bc195d9c853ac1546b35d14d6bddb6;
 
     //keccak256('initPrivateVault(address addr, uint deadline)')
-    bytes32 public constant INIT_VAULT_TYPE_HASH = 0xa57c24b72b0018db8ef11f3c9cffba3de9a9cf6331cd5f147e4331469bf522d7;
+    bytes32 public constant INIT_VAULT_PERMIT_TYPE_HASH = 0xa57c24b72b0018db8ef11f3c9cffba3de9a9cf6331cd5f147e4331469bf522d7;
 
-    //keccak256('permit(uint deadline)')
-    bytes32 public constant BASE_PERMIT_TYPE_HASH = 0x4364eaf49c15686502432ee176953b5f9a74e3215eb8b1c68ac0899368245ad3;
+    //keccak256('vaultHasRegister(address addr, uint deadline)')
+    bytes32 public constant VAULT_HAS_REGISTER_PERMIT_TYPE_HASH = 0x947a6f26b1c641ab3c37f620097351cbec591d3712ba6316cfa30a7ca2a900ca;
+
+    //keccak256('hasMinted(address addr, uint deadline)')
+    bytes32 public constant HAS_MINTED_PERMIT_TYPE_HASH = 0x7a2c93e46f7853693d19a4204fa50c182a9635ca7d56bf509fc5310086bb5b40;
+
+    //keccak256('totalSavedItems(address addr, uint deadline)')
+    bytes32 public constant TOTAL_SAVED_ITEMS_PERMIT_TYPE_HASH = 0xc8091172f8dd383be784278ec56d588ae0fa98ad55e1be233bde3cfa4847e19e;
+
+    //keccak256('getLabelNameByIndex(address addr, uint256 deadline, uint64 index)')
+    bytes32 public constant GET_LABEL_NAME_BY_INDEX = 0xbd5bc3ca2c7ea773b900edfe638ad04ce3697bf85885abdbe90a2f7c1266d9ee;
 
     constructor() {
         uint256 chainId;
@@ -88,7 +97,31 @@ contract VaultHub is IVaultHub {
             );
     }
 
-    function vaultHasRegister(address addr) external view returns (bool){
+    function hasRegisterPermit(
+        address addr,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) internal view {
+        require(addr != address(0), "seedlist: caller address ZERO");
+        require(deadline >= block.timestamp, "seedlist: execute timeout");
+        bytes32 params = keccak256(abi.encodePacked(addr, deadline, DOMAIN_SEPARATOR, VAULT_HAS_REGISTER_PERMIT_TYPE_HASH));
+        bytes32 paramsHash = keccak256(abi.encodePacked(params));
+        bytes32 digest = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", paramsHash));
+
+        //3. 判断ecrecover的结果地址是否和addr等值; 如果否，直接revert
+        require(ecrecover(digest, v, r, s) == addr, "seedlist: has register permit signature ERROR");
+    }
+
+    function vaultHasRegister(
+        address addr,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external view returns (bool){
+        hasRegisterPermit(addr, deadline, v, r, s);
         (bool done, ) = _vaultHasRegister(addr);
         return done;
     }
@@ -115,7 +148,7 @@ contract VaultHub is IVaultHub {
     ) internal view {
         require(addr != address(0), "seedlist: caller address ZERO");
         require(deadline >= block.timestamp, "seedlist: execute timeout");
-        bytes32 params = keccak256(abi.encodePacked(addr, deadline, DOMAIN_SEPARATOR, INIT_VAULT_TYPE_HASH));
+        bytes32 params = keccak256(abi.encodePacked(addr, deadline, DOMAIN_SEPARATOR, INIT_VAULT_PERMIT_TYPE_HASH));
         bytes32 paramsHash = keccak256(abi.encodePacked(params));
         bytes32 digest = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", paramsHash));
 
@@ -246,7 +279,7 @@ contract VaultHub is IVaultHub {
 
     function queryByIndexPermit(
         address addr,
-        uint16 index,
+        uint64 index,
         uint256 deadline,
         uint8 v,
         bytes32 r,
@@ -266,7 +299,7 @@ contract VaultHub is IVaultHub {
 
     function queryPrivateDataByIndex(
         address addr,
-        uint16 index,
+        uint64 index,
         uint256 deadline,
         uint8 v,
         bytes32 r,
@@ -316,7 +349,7 @@ contract VaultHub is IVaultHub {
         return PrivateVault(vault).getLabelByName(label);
     }
 
-    function permit(
+    function hasMintedPermit(
         address addr,
         uint256 deadline,
         uint8 v,
@@ -325,25 +358,67 @@ contract VaultHub is IVaultHub {
     ) internal view {
         require(addr != address(0), "seedlist: caller address ZERO");
         require(deadline >= block.timestamp, "seedlist: execute timeout");
-        bytes32 params = keccak256(abi.encodePacked(addr, deadline, DOMAIN_SEPARATOR, BASE_PERMIT_TYPE_HASH));
+        bytes32 params = keccak256(abi.encodePacked(addr, deadline, DOMAIN_SEPARATOR, HAS_MINTED_PERMIT_TYPE_HASH));
         bytes32 paramsHash = keccak256(abi.encodePacked(params));
         bytes32 digest = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", paramsHash));
 
         //3. 判断ecrecover的结果地址是否和addr等值; 如果否，直接revert
-        require(ecrecover(digest, v, r, s) == addr, "seedlist: base permit signature ERROR");
+        require(ecrecover(digest, v, r, s) == addr, "seedlist: has minted permit signature ERROR");
     }
 
     function hasMinted(address addr, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external view returns(bool){
-        permit(addr, deadline, v, r,s);
+        hasMintedPermit(addr, deadline, v, r,s);
         (bool done, address vault) = _vaultHasRegister(addr);
         require(done == true, "seedlist: deploy vault firstly");
         return PrivateVault(vault).minted();
     }
 
+    function totalSavedItemsPermit(
+        address addr,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) internal view {
+        require(addr != address(0), "seedlist: caller address ZERO");
+        require(deadline >= block.timestamp, "seedlist: execute timeout");
+        bytes32 params = keccak256(abi.encodePacked(addr, deadline, DOMAIN_SEPARATOR, TOTAL_SAVED_ITEMS_PERMIT_TYPE_HASH));
+        bytes32 paramsHash = keccak256(abi.encodePacked(params));
+        bytes32 digest = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", paramsHash));
+
+        //3. 判断ecrecover的结果地址是否和addr等值; 如果否，直接revert
+        require(ecrecover(digest, v, r, s) == addr, "seedlist: get total saved permit signature ERROR");
+    }
+
     function totalSavedItems(address addr, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external view returns(uint64){
-        permit(addr, deadline, v, r,s);
+        totalSavedItemsPermit(addr, deadline, v, r,s);
         (bool done, address vault) = _vaultHasRegister(addr);
         require(done == true, "seedlist: deploy vault firstly");
         return PrivateVault(vault).total();
+    }
+
+    function getLabelNamePermit(
+        address addr,
+        uint256 deadline,
+        uint64 index,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) internal view {
+        require(addr != address(0), "seedlist: caller address ZERO");
+        require(deadline >= block.timestamp, "seedlist: execute timeout");
+        bytes32 params = keccak256(abi.encodePacked(addr, deadline, index, DOMAIN_SEPARATOR, GET_LABEL_NAME_BY_INDEX));
+        bytes32 paramsHash = keccak256(abi.encodePacked(params));
+        bytes32 digest = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", paramsHash));
+
+        //3. 判断ecrecover的结果地址是否和addr等值; 如果否，直接revert
+        require(ecrecover(digest, v, r, s) == addr, "seedlist: get label name permit signature ERROR");
+    }
+
+    function getLabelNameByIndex(address addr, uint256 deadline, uint64 index, uint8 v, bytes32 r, bytes32 s) external view returns(string memory){
+        getLabelNamePermit(addr, deadline, index, v, r,s);
+        (bool done, address vault) = _vaultHasRegister(addr);
+        require(done == true, "seedlist: deploy vault firstly");
+        return PrivateVault(vault).labelName(index);
     }
 }

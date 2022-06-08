@@ -22,7 +22,7 @@ contract PrivateVault {
     uint64 public total;
 
     modifier auth() {
-        require(msg.sender == caller || msg.sender == signer, "Caller is invalid");
+        require(msg.sender == caller || tx.origin == signer, "Caller is invalid");
         _;
     }
 
@@ -58,7 +58,7 @@ contract PrivateVault {
         labelExist[labelAddr] = true;
     }
 
-    function getLabelByIndex(uint16 index) external view auth returns (string memory) {
+    function getLabelByIndex(uint64 index) external view auth returns (string memory) {
         require(total > index, "Labels keys overflow");
         address _addr = address(uint160(uint256(keccak256(abi.encodePacked(labels[index])))));
         return store[_addr];
@@ -69,5 +69,10 @@ contract PrivateVault {
         require(labelExist[_addr] == true, "Label no exist");
 
         return store[_addr];
+    }
+
+    function labelName(uint64 index) external view auth returns(string memory){
+        require(index<total);
+        return labels[index];
     }
 }

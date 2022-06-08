@@ -3,7 +3,14 @@
 pragma solidity >=0.8.12;
 
 interface IVaultHub {
-    function vaultHasRegister(address addr) external view returns (bool);
+    function vaultHasRegister(
+        address addr,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external view returns (bool);
+
     function initPrivateVault(
         address addr,
         uint256 deadline,
@@ -35,7 +42,7 @@ interface IVaultHub {
 
     function queryPrivateDataByIndex(
         address addr,
-        uint16 index,
+        uint64 index,
         uint256 deadline,
         uint8 v,
         bytes32 r,
@@ -54,4 +61,6 @@ interface IVaultHub {
     function hasMinted(address addr, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external view returns(bool);
 
     function totalSavedItems(address addr, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external view returns(uint64);
+
+    function getLabelNameByIndex(address addr, uint256 deadline, uint64 index, uint8 v, bytes32 r, bytes32 s) external view returns(string memory);
 }
