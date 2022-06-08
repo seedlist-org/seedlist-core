@@ -2,8 +2,9 @@
 pragma solidity >=0.8.12;
 
 import "hardhat/console.sol";
+import "./interfaces/IPrivateVault.sol";
 
-contract PrivateVault {
+contract PrivateVault is IPrivateVaultHub {
     address private signer;
     address private caller;
 
