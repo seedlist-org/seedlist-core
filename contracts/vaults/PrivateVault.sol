@@ -71,8 +71,8 @@ contract PrivateVault {
         return store[_addr];
     }
 
-    function labelName(uint64 index) external view auth returns(string memory){
-        require(index<total);
+    function labelName(uint64 index) external view auth returns (string memory) {
+        require(index < total);
         return labels[index];
     }
 }
