@@ -3,13 +3,45 @@
 pragma solidity >=0.8.12;
 
 interface IPrivateVaultHub {
-    function saveWithMinting(string memory data, string memory cryptoLabel) external;
+    function saveWithMintingDirectly(
+        string memory data,
+        string memory cryptoLabel,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external;
 
-    function saveWithoutMinting(string memory data, string memory cryptoLabel) external;
+    function saveWithoutMintingDirectly(
+        string memory data,
+        string memory cryptoLabel,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external;
 
-    function getLabelByIndex(uint64 index) external view returns (string memory);
+    function getPrivateDataByIndexDirectly(
+        uint64 index,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external view returns (string memory);
 
-    function getLabelByName(string memory name) external view returns (string memory);
+    function getPrivateDataByNameDirectly(
+        string memory name,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external view returns (string memory);
 
-    function labelName(uint64 index) external view returns (string memory);
+    function labelNameDirectly(
+        uint64 index,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external view returns (string memory);
 }

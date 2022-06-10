@@ -8,7 +8,7 @@
 const hre = require("hardhat");
 const { ethers } = require("ethers");
 
-async function _main() {
+async function main() {
   // Hardhat always runs the compile task when running scripts with its command
   // line interface.
   //
@@ -50,13 +50,15 @@ async function _main() {
   let transResponse = await vaultHubContract.setTreasuryAddress(treasury.address);
   let receipt1 = await  transResponse.wait(1);
   console.log("vaulthub set treasury finished");
+  let DOMAIN = await vaultHubContract.DOMAIN_SEPARATOR();
+  console.log("DOMAIN:",DOMAIN);
 }
 
-async function main() {
+async function _main() {
 	const accounts = await hre.ethers.getSigners();
 	const signer = accounts[0];
 
-	let hubAddress = "0xbe47c1759D9797D1fe3951d7c319e7493F1b4C8F";
+	let hubAddress = "0x8cC65684853B84E578aAA5F2CEE0fDa10A688560";
 	let VaultHub = await hre.ethers.getContractFactory("VaultHub");
 	let vaultHub = new hre.ethers.Contract(hubAddress, VaultHub.interface, signer);
 
