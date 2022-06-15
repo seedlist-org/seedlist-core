@@ -51,7 +51,7 @@ async function main() {
   let receipt1 = await  transResponse.wait(1);
   console.log("vaulthub set treasury finished");
   let DOMAIN = await vaultHubContract.DOMAIN_SEPARATOR();
-  console.log("DOMAIN:",DOMAIN);
+  console.log("DOMAIN_SEPARATOR:",DOMAIN);
 }
 
 async function _main() {

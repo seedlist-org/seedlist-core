@@ -15,7 +15,10 @@ contract PrivateVault is IPrivateVaultHub {
     mapping(address => bool) private labelExist;
 
     // 用来标示某个label被存储的位置
-    mapping(uint64 => string) private labels;
+    mapping(uint64 => address) private labels;
+
+    //用来标示label的hash值和label真实值之间的映射关系
+    mapping(address => string) private hashToLabel;
 
     // 用来存储真实的加密数据
     mapping(address => string) private store;
@@ -33,21 +36,21 @@ contract PrivateVault is IPrivateVaultHub {
     bytes32 public constant LABEL_NAME_PERMIT_TYPE_HASH =
         0xcbb2475c190d2e287f7de56c688846f7612f70b210a3856ad34c475cbad0dda7;
 
-    //keccak256('getPrivateDataByNameDirectly(string memory name, uint256 deadline)')
+    //keccak256('getPrivateDataByNameDirectly(address name, uint256 deadline)')
     bytes32 public constant GET_PRIVATE_DATA_BY_NAME_PERMIT_TYPE_HASH =
-        0x83a9c8c05ed0fb1e4d4baaef671e3f96099729926f732e6aaac34a751230c7b8;
+    0x91fb9dd060bd9ffe42a43373e9de88b3a9b106cbce07f242fd6f2c4a41ef921d;
 
     //keccak256('getPrivateDataByIndexDirectly(uint64 index, uint256 deadline)')
     bytes32 public constant GET_PRIVATE_DATA_BY_INDEX_PERMIT_TYPE_HASH =
         0x17558919af4007c4fb94572ba8e807922ff7db103814e127ad21ef481ca35d98;
 
-    //keccak256('saveWithoutMintingDirectly(string memory data, string memory cryptoLabel, uint256 deadline)')
+    //keccak256('saveWithoutMintingDirectly(string memory data, string memory cryptoLabel, address labelHash, uint256 deadline)')
     bytes32 public constant SAVE_WITHOUT_MINTING_PERMIT_TYPE_HASH =
-        0xdf412ff5be017ec35abe4df3f9a2b33c93ab92336a734ac392576c30bad057f5;
+    0x6681e086fd2042ee88d7eb0f54dbe27796a216fb36f4e834a75b15d90b082727;
 
-    //keccak256('saveWithMintingDirectly(string memory data, string memory cryptoLabel, uint256 deadline)')
+    //keccak256('saveWithMintingDirectly(string memory data, string memory cryptoLabel, address labelHash, uint256 deadline)')
     bytes32 public constant SAVE_WITH_MINTING_PERMIT_TYPE_HASH =
-        0xd9066cfdcd2adeb7f91eaa0872abd8e0ce6c9e7c131f920e0b52e3b052a791c8;
+    0x8774f567563ee2634c371978f5cfa8e41e5d255912344cb6b7d652f94c66c8a4;
 
     modifier auth() {
         require(msg.sender == caller, "Caller is invalid");
@@ -90,16 +93,17 @@ contract PrivateVault is IPrivateVaultHub {
     }
 
     //cryptoLabel 是加密后的label值
-    function saveWithMinting(string memory data, string memory cryptoLabel) external auth {
+    function saveWithMinting(string memory data, string memory cryptoLabel, address labelHash) external auth {
         require(minted == false, "seedlist: mint has done");
-        address labelAddr = address(uint160(uint256(keccak256(abi.encodePacked(cryptoLabel)))));
-        //label没有被使用过
-        require(labelExist[labelAddr] == false, "Label has exist");
 
-        store[labelAddr] = data;
-        labels[total] = cryptoLabel;
+        //label没有被使用过
+        require(labelExist[labelHash] == false, "Label has exist");
+
+        store[labelHash] = data;
+        labels[total] = labelHash;
+        hashToLabel[labelHash] = cryptoLabel;
         total++;
-        labelExist[labelAddr] = true;
+        labelExist[labelHash] = true;
 
         minted = true;
     }
@@ -107,6 +111,7 @@ contract PrivateVault is IPrivateVaultHub {
     function saveWithMintingPermit(
         string memory data,
         string memory cryptoLabel,
+        address labelHash,
         uint256 deadline,
         uint8 v,
         bytes32 r,
@@ -118,6 +123,7 @@ contract PrivateVault is IPrivateVaultHub {
                 signer,
                 bytes(data),
                 bytes(cryptoLabel),
+                labelHash,
                 deadline,
                 DOMAIN_SEPARATOR,
                 SAVE_WITH_MINTING_PERMIT_TYPE_HASH
@@ -129,39 +135,42 @@ contract PrivateVault is IPrivateVaultHub {
     function saveWithMintingDirectly(
         string memory data,
         string memory cryptoLabel,
+        address labelHash,
         uint256 deadline,
         uint8 v,
         bytes32 r,
         bytes32 s
     ) external {
         require(minted == false, "seedlist: mint has done");
-        saveWithMintingPermit(data, cryptoLabel, deadline, v, r, s);
-        address labelAddr = address(uint160(uint256(keccak256(abi.encodePacked(cryptoLabel)))));
-        //label没有被使用过
-        require(labelExist[labelAddr] == false, "Label has exist");
+        saveWithMintingPermit(data, cryptoLabel, labelHash, deadline, v, r, s);
 
-        store[labelAddr] = data;
-        labels[total] = cryptoLabel;
+        //label没有被使用过
+        require(labelExist[labelHash] == false, "Label has exist");
+
+        store[labelHash] = data;
+        labels[total] = labelHash;
+        hashToLabel[labelHash] = cryptoLabel;
         total++;
-        labelExist[labelAddr] = true;
+        labelExist[labelHash] = true;
 
         minted = true;
     }
 
     ////////////////////////////
-    function saveWithoutMinting(string memory data, string memory cryptoLabel) external auth {
-        address labelAddr = address(uint160(uint256(keccak256(abi.encodePacked(cryptoLabel)))));
+    function saveWithoutMinting(string memory data, string memory cryptoLabel, address labelHash) external auth {
         //label没有被使用过
-        require(labelExist[labelAddr] == false, "Label has exist");
-        store[labelAddr] = data;
-        labels[total] = cryptoLabel;
+        require(labelExist[labelHash] == false, "Label has exist");
+        store[labelHash] = data;
+        labels[total] = labelHash;
+        hashToLabel[labelHash] = cryptoLabel;
         total++;
-        labelExist[labelAddr] = true;
+        labelExist[labelHash] = true;
     }
 
     function saveWithoutMintingPermit(
         string memory data,
         string memory cryptoLabel,
+        address labelHash,
         uint256 deadline,
         uint8 v,
         bytes32 r,
@@ -173,6 +182,7 @@ contract PrivateVault is IPrivateVaultHub {
                 signer,
                 bytes(data),
                 bytes(cryptoLabel),
+                labelHash,
                 deadline,
                 DOMAIN_SEPARATOR,
                 SAVE_WITHOUT_MINTING_PERMIT_TYPE_HASH
@@ -184,26 +194,26 @@ contract PrivateVault is IPrivateVaultHub {
     function saveWithoutMintingDirectly(
         string memory data,
         string memory cryptoLabel,
+        address labelHash,
         uint256 deadline,
         uint8 v,
         bytes32 r,
         bytes32 s
     ) external {
-        saveWithoutMintingPermit(data, cryptoLabel, deadline, v, r, s);
-        address labelAddr = address(uint160(uint256(keccak256(abi.encodePacked(cryptoLabel)))));
+        saveWithoutMintingPermit(data, cryptoLabel, labelHash, deadline, v, r, s);
         //label没有被使用过
-        require(labelExist[labelAddr] == false, "Label has exist");
-        store[labelAddr] = data;
-        labels[total] = cryptoLabel;
+        require(labelExist[labelHash] == false, "Label has exist");
+        store[labelHash] = data;
+        labels[total] = labelHash;
+        hashToLabel[labelHash] = cryptoLabel;
         total++;
-        labelExist[labelAddr] = true;
+        labelExist[labelHash] = true;
     }
 
     ////////////////////////////
     function getPrivateDataByIndex(uint64 index) external view auth returns (string memory) {
         require(total > index, "Labels keys overflow");
-        address _addr = address(uint160(uint256(keccak256(abi.encodePacked(labels[index])))));
-        return store[_addr];
+        return store[labels[index]];
     }
 
     function getPrivateDataByIndexPermit(
@@ -229,20 +239,18 @@ contract PrivateVault is IPrivateVaultHub {
     ) external view returns (string memory) {
         require(total > index, "Data keys overflow");
         getPrivateDataByIndexPermit(index, deadline, v, r, s);
-        address _addr = address(uint160(uint256(keccak256(abi.encodePacked(labels[index])))));
-        return store[_addr];
+        return store[labels[index]];
     }
 
     ////////////////////////////
-    function getPrivateDataByName(string memory name) external view auth returns (string memory) {
-        address _addr = address(uint160(uint256(keccak256(abi.encodePacked(name)))));
-        require(labelExist[_addr] == true, "Label no exist");
+    function getPrivateDataByName(address name) external view auth returns (string memory) {
+        require(labelExist[name] == true, "Label no exist");
 
-        return store[_addr];
+        return store[name];
     }
 
     function getPrivateDataByNamePermit(
-        string memory name,
+        address name,
         uint256 deadline,
         uint8 v,
         bytes32 r,
@@ -250,29 +258,28 @@ contract PrivateVault is IPrivateVaultHub {
     ) internal view {
         require(deadline >= block.timestamp, "vault: execute timeout");
         bytes32 params = keccak256(
-            abi.encodePacked(signer, bytes(name), deadline, DOMAIN_SEPARATOR, GET_PRIVATE_DATA_BY_NAME_PERMIT_TYPE_HASH)
+            abi.encodePacked(signer, name, deadline, DOMAIN_SEPARATOR, GET_PRIVATE_DATA_BY_NAME_PERMIT_TYPE_HASH)
         );
         verifyPermit(params, v, r, s, "vault: get data by name permit ERROR");
     }
 
     function getPrivateDataByNameDirectly(
-        string memory name,
+        address name,
         uint256 deadline,
         uint8 v,
         bytes32 r,
         bytes32 s
     ) external view returns (string memory) {
         getPrivateDataByNamePermit(name, deadline, v, r, s);
-        address _addr = address(uint160(uint256(keccak256(abi.encodePacked(name)))));
-        require(labelExist[_addr] == true, "Label no exist");
+        require(labelExist[name] == true, "Label no exist");
 
-        return store[_addr];
+        return store[name];
     }
 
     ////////////////////////////
     function labelName(uint64 index) external view auth returns (string memory) {
         require(index < total);
-        return labels[index];
+        return hashToLabel[labels[index]];
     }
 
     function labelNamePermit(
@@ -298,6 +305,6 @@ contract PrivateVault is IPrivateVaultHub {
     ) external view returns (string memory) {
         require(index < total);
         labelNamePermit(index, deadline, v, r, s);
-        return labels[index];
+        return hashToLabel[labels[index]];
     }
 }

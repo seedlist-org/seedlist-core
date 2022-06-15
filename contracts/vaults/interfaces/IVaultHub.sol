@@ -23,6 +23,7 @@ interface IVaultHub {
         address addr,
         string memory data,
         string memory cryptoLabel,
+        address labelHash,
         address receiver,
         uint256 deadline,
         uint8 v,
@@ -34,6 +35,7 @@ interface IVaultHub {
         address addr,
         string memory data,
         string memory cryptoLabel,
+        address labelHash,
         uint256 deadline,
         uint8 v,
         bytes32 r,
@@ -51,7 +53,7 @@ interface IVaultHub {
 
     function queryPrivateDataByName(
         address addr,
-        string memory label,
+        address labelHash,
         uint256 deadline,
         uint8 v,
         bytes32 r,

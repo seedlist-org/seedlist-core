@@ -22,46 +22,46 @@ contract VaultHub is IVaultHub {
     // keccak256('EIP712Domain(string name, string version, uint256 chainId, address VaultHubContract)');
     bytes32 public constant DOMAIN_TYPE_HASH = 0x6c055b4eb43bcfe637041a3adda3d9f2b05d93fc3a54fc8c978e7d0d95e35b66;
 
-    // keccak256('savePrivateDataWithMinting(address addr, string memory data, string memory cryptoLabel,
-    // address receiver, uint deadline)');
+    // keccak256('savePrivateDataWithMinting(address addr, string memory data, string memory cryptoLabel, address labelHash,
+    // address receiver, uint256 deadline)');
     bytes32 public constant MINT_SAVE_PERMIT_TYPE_HASH =
-        0xc7c597494eec6dbc8ccea152a67ae6a2c377f2c8973e00d770d0d56739bd6de4;
+    0xe4f65c557ffdb3934e9fffd9af8d365eca51b20601a53082ce10b1e0ac04461f;
 
     // keccak256('savePrivateDataWithoutMinting(address addr, string memory data,
-    // string memory cryptoLabel, uint deadline)');
-    bytes32 public constant SAVE_PERMIT_TYPE_HASH = 0xd13e83bcf4fce4727bb85a65a6934ff2f1d0e8c4fd78e9aec10a9ec368be85d0;
+    // string memory cryptoLabel, address labelHash, uint256 deadline)');
+    bytes32 public constant SAVE_PERMIT_TYPE_HASH = 0x25f3fe064ef39028ecb8ad22c47a4f382a81ca1f21d802b4fdb8c3e213b9df72;
 
-    //keccak256('queryPrivateDataByIndex(address addr, uint64 index, uint deadline)')
+    //keccak256('queryPrivateDataByIndex(address addr, uint64 index, uint256 deadline)')
     bytes32 public constant INDEX_QUERY_PERMIT_TYPE_HASH =
-        0x46104079641008f73d549d958985fcf7fbbc01bd836d18b08a6adb8a3364a833;
+    0xbcb00634c612072a661bb64fa073e7806d31f3790f1c827cd20f95542b5af679;
 
-    //keccak256('queryPrivateDataByName(address addr, string memory label, uint deadline)')
+    //keccak256('queryPrivateDataByName(address addr, address labelHash, uint256 deadline)')
     bytes32 public constant NAME_QUERY_PERMIT_TYPE_HASH =
-        0xe024d3867535747968844166b70261c903bc195d9c853ac1546b35d14d6bddb6;
+    0xab4ac209d4a97678c29d0f2f4ef3539a24e0ce6dbd2dd481c818134b61d28ecc;
 
-    //keccak256('initPrivateVault(address addr, uint deadline)')
+    //keccak256('initPrivateVault(address addr, uint256 deadline)')
     bytes32 public constant INIT_VAULT_PERMIT_TYPE_HASH =
-        0xa57c24b72b0018db8ef11f3c9cffba3de9a9cf6331cd5f147e4331469bf522d7;
+    0xef93604cd5c5e7d35e7ef7d38e1cac9e1cc450e49bc931effd1f65a5a993121d;
 
-    //keccak256('vaultHasRegister(address addr, uint deadline)')
+    //keccak256('vaultHasRegister(address addr, uint256 deadline)')
     bytes32 public constant VAULT_HAS_REGISTER_PERMIT_TYPE_HASH =
-        0x947a6f26b1c641ab3c37f620097351cbec591d3712ba6316cfa30a7ca2a900ca;
+    0x5a14c87645febe5840f128409acb12772ff89f3398b05142d7e039c76e0844e8;
 
-    //keccak256('hasMinted(address addr, uint deadline)')
+    //keccak256('hasMinted(address addr, uint256 deadline)')
     bytes32 public constant HAS_MINTED_PERMIT_TYPE_HASH =
-        0x7a2c93e46f7853693d19a4204fa50c182a9635ca7d56bf509fc5310086bb5b40;
+    0xdbd66a895de1fdf2e44b84c83cf1e4f482f647eb80397d069bf7763a583ce1a5;
 
-    //keccak256('totalSavedItems(address addr, uint deadline)')
+    //keccak256('totalSavedItems(address addr, uint256 deadline)')
     bytes32 public constant TOTAL_SAVED_ITEMS_PERMIT_TYPE_HASH =
-        0xc8091172f8dd383be784278ec56d588ae0fa98ad55e1be233bde3cfa4847e19e;
+    0xf65e93839555276acb1b1c33eb49dff5fa6a88c6991b9b84b680dc961b85f847;
 
     //keccak256('getLabelNameByIndex(address addr, uint256 deadline, uint64 index)')
     bytes32 public constant GET_LABEL_NAME_BY_INDEX =
-        0xbd5bc3ca2c7ea773b900edfe638ad04ce3697bf85885abdbe90a2f7c1266d9ee;
+    0xbd5bc3ca2c7ea773b900edfe638ad04ce3697bf85885abdbe90a2f7c1266d9ee;
 
-    //keccak256('queryPrivateVaultAddress(address addr, uint deadline)')
+    //keccak256('queryPrivateVaultAddress(address addr, uint256 deadline)')
     bytes32 public constant QUERY_PRIVATE_VAULT_ADDRESS_PERMIT_TYPE_HASH =
-        0xf63b757fe5d6cdcf507967b75ba29c7b30eb7a73f255ccde1db9178daf683f69;
+    0x21b7e085fb49739c78b83ddb0a8a7e4b469211d08958f57d52ff68325943de04;
 
     constructor() {
         uint256 chainId;
@@ -208,6 +208,7 @@ contract VaultHub is IVaultHub {
         address addr,
         string memory data,
         string memory cryptoLabel,
+        address labelHash,
         address receiver,
         uint256 deadline,
         uint8 v,
@@ -221,6 +222,7 @@ contract VaultHub is IVaultHub {
                 addr,
                 bytes(data),
                 bytes(cryptoLabel),
+                labelHash,
                 receiver,
                 deadline,
                 DOMAIN_SEPARATOR,
@@ -234,13 +236,14 @@ contract VaultHub is IVaultHub {
         address addr,
         string memory data,
         string memory cryptoLabel,
+        address labelHash,
         address receiver,
         uint256 deadline,
         uint8 v,
         bytes32 r,
         bytes32 s
     ) external treasuryValid {
-        mintSavePermit(addr, data, cryptoLabel, receiver, deadline, v, r, s);
+        mintSavePermit(addr, data, cryptoLabel, labelHash, receiver, deadline, v, r, s);
 
         (bool done, address vault) = _vaultHasRegister(addr);
         require(done == true, "seedlist: deploy vault firstly");
@@ -248,14 +251,15 @@ contract VaultHub is IVaultHub {
 
         ITreasury(treasury).mint(receiver);
 
-        PrivateVault(vault).saveWithMinting(data, cryptoLabel);
+        PrivateVault(vault).saveWithMinting(data, cryptoLabel, labelHash);
         emit Save(State.SAVE_SUCCESS, addr);
     }
 
-    function savePermit(
+    function saveWithoutMintPermit(
         address addr,
         string memory data,
         string memory cryptoLabel,
+        address labelHash,
         uint256 deadline,
         uint8 v,
         bytes32 r,
@@ -264,7 +268,7 @@ contract VaultHub is IVaultHub {
         require(addr != address(0), "seedlist: caller address ZERO");
         require(deadline >= block.timestamp, "seedlist: execute timeout");
         bytes32 params = keccak256(
-            abi.encodePacked(addr, bytes(data), bytes(cryptoLabel), deadline, DOMAIN_SEPARATOR, SAVE_PERMIT_TYPE_HASH)
+            abi.encodePacked(addr, bytes(data), bytes(cryptoLabel), labelHash, deadline, DOMAIN_SEPARATOR, SAVE_PERMIT_TYPE_HASH)
         );
         verifyPermit(addr, params, v, r, s, "seedlist: save permit ERROR");
     }
@@ -273,17 +277,18 @@ contract VaultHub is IVaultHub {
         address addr,
         string memory data,
         string memory cryptoLabel,
+        address labelHash,
         uint256 deadline,
         uint8 v,
         bytes32 r,
         bytes32 s
     ) external {
-        savePermit(addr, data, cryptoLabel, deadline, v, r, s);
+        saveWithoutMintPermit(addr, data, cryptoLabel, labelHash, deadline, v, r, s);
 
         (bool done, address vault) = _vaultHasRegister(addr);
         require(done == true, "seedlist: deploy vault firstly");
 
-        PrivateVault(vault).saveWithoutMinting(data, cryptoLabel);
+        PrivateVault(vault).saveWithoutMinting(data, cryptoLabel, labelHash);
         emit Save(State.SAVE_SUCCESS, addr);
     }
 
@@ -321,7 +326,7 @@ contract VaultHub is IVaultHub {
 
     function queryByNamePermit(
         address addr,
-        string memory labelName,
+        address labelHash,
         uint256 deadline,
         uint8 v,
         bytes32 r,
@@ -330,25 +335,25 @@ contract VaultHub is IVaultHub {
         require(addr != address(0), "seedlist: caller address ZERO");
         require(deadline >= block.timestamp, "seedlist: execute timeout");
         bytes32 params = keccak256(
-            abi.encodePacked(addr, bytes(labelName), deadline, DOMAIN_SEPARATOR, NAME_QUERY_PERMIT_TYPE_HASH)
+            abi.encodePacked(addr, labelHash, deadline, DOMAIN_SEPARATOR, NAME_QUERY_PERMIT_TYPE_HASH)
         );
         verifyPermit(addr, params, v, r, s, "seedlist: name query permit ERROR");
     }
 
     function queryPrivateDataByName(
         address addr,
-        string memory label,
+        address labelHash,
         uint256 deadline,
         uint8 v,
         bytes32 r,
         bytes32 s
     ) external view returns (string memory) {
-        queryByNamePermit(addr, label, deadline, v, r, s);
+        queryByNamePermit(addr, labelHash, deadline, v, r, s);
 
         (bool done, address vault) = _vaultHasRegister(addr);
         require(done == true, "seedlist: deploy vault firstly");
 
-        return PrivateVault(vault).getPrivateDataByName(label);
+        return PrivateVault(vault).getPrivateDataByName(labelHash);
     }
 
     function queryPrivateVaultAddressPermit(

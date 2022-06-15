@@ -6,6 +6,7 @@ interface IPrivateVaultHub {
     function saveWithMintingDirectly(
         string memory data,
         string memory cryptoLabel,
+        address labelHash,
         uint256 deadline,
         uint8 v,
         bytes32 r,
@@ -15,6 +16,7 @@ interface IPrivateVaultHub {
     function saveWithoutMintingDirectly(
         string memory data,
         string memory cryptoLabel,
+        address labelHash,
         uint256 deadline,
         uint8 v,
         bytes32 r,
@@ -30,7 +32,7 @@ interface IPrivateVaultHub {
     ) external view returns (string memory);
 
     function getPrivateDataByNameDirectly(
-        string memory name,
+        address name,
         uint256 deadline,
         uint8 v,
         bytes32 r,
