@@ -36,6 +36,10 @@ contract PrivateVault is IPrivateVaultHub {
     bytes32 public constant LABEL_NAME_PERMIT_TYPE_HASH =
         0xcbb2475c190d2e287f7de56c688846f7612f70b210a3856ad34c475cbad0dda7;
 
+    //keccak256('labelIsExistDirectly(address labelHash, uint256 deadline)')
+    bytes32 public constant LABEL_EXIST_PERMIT_TYPE_HASH =
+    0x5e9a0e1424c7f33522faa862eafa09a676e96246da16c8b58d5803ba8010584f;
+
     //keccak256('getPrivateDataByNameDirectly(address name, uint256 deadline)')
     bytes32 public constant GET_PRIVATE_DATA_BY_NAME_PERMIT_TYPE_HASH =
     0x91fb9dd060bd9ffe42a43373e9de88b3a9b106cbce07f242fd6f2c4a41ef921d;
@@ -306,5 +310,36 @@ contract PrivateVault is IPrivateVaultHub {
         require(index < total);
         labelNamePermit(index, deadline, v, r, s);
         return hashToLabel[labels[index]];
+    }
+
+    //////////////////////////////////////////
+    function labelIsExist(address labelHash) external view auth returns (bool) {
+        bool exist = labelExist[labelHash];
+        return exist;
+    }
+
+    function labelIsExistPermit(
+        address labelHash,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) internal view {
+        require(deadline >= block.timestamp, "vault: execute timeout");
+        bytes32 params = keccak256(
+            abi.encodePacked(signer, labelHash, deadline, DOMAIN_SEPARATOR, LABEL_EXIST_PERMIT_TYPE_HASH)
+        );
+        verifyPermit(params, v, r, s, "vault: label exist permit ERROR");
+    }
+
+    function labelIsExistDirectly(
+        address labelHash,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external view returns (bool) {
+        labelIsExistPermit(labelHash, deadline, v, r, s);
+        return labelExist[labelHash];
     }
 }

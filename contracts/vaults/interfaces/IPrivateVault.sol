@@ -46,4 +46,12 @@ interface IPrivateVaultHub {
         bytes32 r,
         bytes32 s
     ) external view returns (string memory);
+
+    function labelIsExistDirectly(
+        address labelHash,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external view returns (bool);
 }

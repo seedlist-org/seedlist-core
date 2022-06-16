@@ -56,8 +56,12 @@ contract VaultHub is IVaultHub {
     0xf65e93839555276acb1b1c33eb49dff5fa6a88c6991b9b84b680dc961b85f847;
 
     //keccak256('getLabelNameByIndex(address addr, uint256 deadline, uint64 index)')
-    bytes32 public constant GET_LABEL_NAME_BY_INDEX =
+    bytes32 public constant GET_LABEL_NAME_BY_INDEX_TYPE_HASH =
     0xbd5bc3ca2c7ea773b900edfe638ad04ce3697bf85885abdbe90a2f7c1266d9ee;
+
+    //keccak256('labelExist(address addr, address labelHash, uint256 deadline)')
+    bytes32 public constant LABEL_EXIST_TYPE_HASH =
+    0xac1275bd89417f307b1ae27de4967e4910dfab4abd173eb3e6a3352c21ae42fe;
 
     //keccak256('queryPrivateVaultAddress(address addr, uint256 deadline)')
     bytes32 public constant QUERY_PRIVATE_VAULT_ADDRESS_PERMIT_TYPE_HASH =
@@ -448,7 +452,7 @@ contract VaultHub is IVaultHub {
     ) internal view {
         require(addr != address(0), "seedlist: caller address ZERO");
         require(deadline >= block.timestamp, "seedlist: execute timeout");
-        bytes32 params = keccak256(abi.encodePacked(addr, deadline, index, DOMAIN_SEPARATOR, GET_LABEL_NAME_BY_INDEX));
+        bytes32 params = keccak256(abi.encodePacked(addr, deadline, index, DOMAIN_SEPARATOR, GET_LABEL_NAME_BY_INDEX_TYPE_HASH));
         verifyPermit(addr, params, v, r, s, "seedlist: get lable name permit ERROR");
     }
 
@@ -464,5 +468,33 @@ contract VaultHub is IVaultHub {
         (bool done, address vault) = _vaultHasRegister(addr);
         require(done == true, "seedlist: deploy vault firstly");
         return PrivateVault(vault).labelName(index);
+    }
+
+    function getLabelExistPermit(
+        address addr,
+        address labelHash,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) internal view {
+        require(addr != address(0), "seedlist: caller address ZERO");
+        require(deadline >= block.timestamp, "seedlist: execute timeout");
+        bytes32 params = keccak256(abi.encodePacked(addr, labelHash, deadline, DOMAIN_SEPARATOR, LABEL_EXIST_TYPE_HASH));
+        verifyPermit(addr, params, v, r, s, "seedlist:lable exist permit ERROR");
+    }
+
+    function labelExist(
+        address addr,
+        address labelHash,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external view returns (bool) {
+        getLabelExistPermit(addr, labelHash, deadline, v, r, s);
+        (bool done, address vault) = _vaultHasRegister(addr);
+        require(done == true, "seedlist: deploy vault firstly");
+        return PrivateVault(vault).labelIsExist(labelHash);
     }
 }

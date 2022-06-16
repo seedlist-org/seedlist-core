@@ -92,4 +92,13 @@ interface IVaultHub {
         bytes32 r,
         bytes32 s
     ) external view returns (address);
+
+    function labelExist(
+        address addr,
+        address labelHash,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external view returns (bool);
 }
