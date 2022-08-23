@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.12;
-
-import "hardhat/console.sol";
 import "./interfaces/IPrivateVault.sol";
-
+import {Constant} from "../libraries/Constant.sol";
 contract PrivateVault is IPrivateVaultHub {
     address private signer;
-    address private caller;
+    address public caller;
 
     // 每个vault只能参与一次mint seed 行为
     bool public minted;
@@ -25,36 +23,10 @@ contract PrivateVault is IPrivateVaultHub {
 
     uint64 public total;
 
-    string public constant DOMAIN_NAME = "privateVault@seedlist.org";
-    string public constant DOMAIN_VERSION = "1.0.0";
+    uint256 private fee = 150000000000000;
+
     bytes32 public DOMAIN_SEPARATOR;
 
-    // keccak256('EIP712Domain(string name, string version, uint256 chainId, address PrivateVaultContract)');
-    bytes32 public constant DOMAIN_TYPE_HASH = 0xdad980a10e49615eb7fc5d7774307c8f04d959ac46349850121d52b1e409fc1e;
-
-    //keccak256('labelNameDirectly(uint64 index, uint256 deadline)')
-    bytes32 public constant LABEL_NAME_PERMIT_TYPE_HASH =
-        0xcbb2475c190d2e287f7de56c688846f7612f70b210a3856ad34c475cbad0dda7;
-
-    //keccak256('labelIsExistDirectly(address labelHash, uint256 deadline)')
-    bytes32 public constant LABEL_EXIST_PERMIT_TYPE_HASH =
-    0x5e9a0e1424c7f33522faa862eafa09a676e96246da16c8b58d5803ba8010584f;
-
-    //keccak256('getPrivateDataByNameDirectly(address name, uint256 deadline)')
-    bytes32 public constant GET_PRIVATE_DATA_BY_NAME_PERMIT_TYPE_HASH =
-    0x91fb9dd060bd9ffe42a43373e9de88b3a9b106cbce07f242fd6f2c4a41ef921d;
-
-    //keccak256('getPrivateDataByIndexDirectly(uint64 index, uint256 deadline)')
-    bytes32 public constant GET_PRIVATE_DATA_BY_INDEX_PERMIT_TYPE_HASH =
-        0x17558919af4007c4fb94572ba8e807922ff7db103814e127ad21ef481ca35d98;
-
-    //keccak256('saveWithoutMintingDirectly(string memory data, string memory cryptoLabel, address labelHash, uint256 deadline)')
-    bytes32 public constant SAVE_WITHOUT_MINTING_PERMIT_TYPE_HASH =
-    0x6681e086fd2042ee88d7eb0f54dbe27796a216fb36f4e834a75b15d90b082727;
-
-    //keccak256('saveWithMintingDirectly(string memory data, string memory cryptoLabel, address labelHash, uint256 deadline)')
-    bytes32 public constant SAVE_WITH_MINTING_PERMIT_TYPE_HASH =
-    0x8774f567563ee2634c371978f5cfa8e41e5d255912344cb6b7d652f94c66c8a4;
 
     modifier auth() {
         require(msg.sender == caller, "Caller is invalid");
@@ -68,9 +40,9 @@ contract PrivateVault is IPrivateVaultHub {
         }
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
-                DOMAIN_TYPE_HASH,
-                keccak256(bytes(DOMAIN_NAME)),
-                keccak256(bytes(DOMAIN_VERSION)),
+                Constant.PRIVATE_DOMAIN_TYPE_HASH,
+                keccak256(bytes(Constant.PRIVATE_DOMAIN_NAME)),
+                keccak256(bytes(Constant.PRIVATE_DOMAIN_VERSION)),
                 chainId,
                 address(this)
             )
@@ -121,7 +93,7 @@ contract PrivateVault is IPrivateVaultHub {
         bytes32 r,
         bytes32 s
     ) internal view {
-        require(deadline >= block.timestamp, "vault: execute timeout");
+        require(deadline >= block.timestamp, "vault:execute timeout");
         bytes32 params = keccak256(
             abi.encodePacked(
                 signer,
@@ -130,10 +102,10 @@ contract PrivateVault is IPrivateVaultHub {
                 labelHash,
                 deadline,
                 DOMAIN_SEPARATOR,
-                SAVE_WITH_MINTING_PERMIT_TYPE_HASH
+                Constant.PRIVATE_SAVE_WITH_MINTING_PERMIT_TYPE_HASH
             )
         );
-        verifyPermit(params, v, r, s, "vault: save with minting permit ERROR");
+        verifyPermit(params, v, r, s, "vault:minting permit ERROR");
     }
 
     function saveWithMintingDirectly(
@@ -145,7 +117,11 @@ contract PrivateVault is IPrivateVaultHub {
         bytes32 r,
         bytes32 s
     ) external {
-        require(minted == false, "seedlist: mint has done");
+/*
+        require(msg.value>=fee, "vault:more than 0.00015");
+        payable(caller).transfer(msg.value);
+*/
+        require(minted == false, "vault: mint has done");
         saveWithMintingPermit(data, cryptoLabel, labelHash, deadline, v, r, s);
 
         //label没有被使用过
@@ -189,10 +165,10 @@ contract PrivateVault is IPrivateVaultHub {
                 labelHash,
                 deadline,
                 DOMAIN_SEPARATOR,
-                SAVE_WITHOUT_MINTING_PERMIT_TYPE_HASH
+                Constant.PRIVATE_SAVE_WITHOUT_MINTING_PERMIT_TYPE_HASH
             )
         );
-        verifyPermit(params, v, r, s, "vault: save without minting permit ERROR");
+        verifyPermit(params, v, r, s, "vault: minting permit ERROR");
     }
 
     function saveWithoutMintingDirectly(
@@ -204,6 +180,10 @@ contract PrivateVault is IPrivateVaultHub {
         bytes32 r,
         bytes32 s
     ) external {
+/*
+        require(msg.value>=fee, "vault:more than 0.00015");
+        payable(caller).transfer(msg.value);
+*/
         saveWithoutMintingPermit(data, cryptoLabel, labelHash, deadline, v, r, s);
         //label没有被使用过
         require(labelExist[labelHash] == false, "Label has exist");
@@ -229,7 +209,7 @@ contract PrivateVault is IPrivateVaultHub {
     ) internal view {
         require(deadline >= block.timestamp, "vault: execute timeout");
         bytes32 params = keccak256(
-            abi.encodePacked(signer, index, deadline, DOMAIN_SEPARATOR, GET_PRIVATE_DATA_BY_INDEX_PERMIT_TYPE_HASH)
+            abi.encodePacked(signer, index, deadline, DOMAIN_SEPARATOR, Constant.PRIVATE_GET_PRIVATE_DATA_BY_INDEX_PERMIT_TYPE_HASH)
         );
         verifyPermit(params, v, r, s, "vault: index label permit ERROR");
     }
@@ -262,7 +242,7 @@ contract PrivateVault is IPrivateVaultHub {
     ) internal view {
         require(deadline >= block.timestamp, "vault: execute timeout");
         bytes32 params = keccak256(
-            abi.encodePacked(signer, name, deadline, DOMAIN_SEPARATOR, GET_PRIVATE_DATA_BY_NAME_PERMIT_TYPE_HASH)
+            abi.encodePacked(signer, name, deadline, DOMAIN_SEPARATOR, Constant.PRIVATE_GET_PRIVATE_DATA_BY_NAME_PERMIT_TYPE_HASH)
         );
         verifyPermit(params, v, r, s, "vault: get data by name permit ERROR");
     }
@@ -295,7 +275,7 @@ contract PrivateVault is IPrivateVaultHub {
     ) internal view {
         require(deadline >= block.timestamp, "vault: execute timeout");
         bytes32 params = keccak256(
-            abi.encodePacked(signer, index, deadline, DOMAIN_SEPARATOR, LABEL_NAME_PERMIT_TYPE_HASH)
+            abi.encodePacked(signer, index, deadline, DOMAIN_SEPARATOR, Constant.PRIVATE_LABEL_NAME_PERMIT_TYPE_HASH)
         );
         verifyPermit(params, v, r, s, "vault: label name permit ERROR");
     }
@@ -327,7 +307,7 @@ contract PrivateVault is IPrivateVaultHub {
     ) internal view {
         require(deadline >= block.timestamp, "vault: execute timeout");
         bytes32 params = keccak256(
-            abi.encodePacked(signer, labelHash, deadline, DOMAIN_SEPARATOR, LABEL_EXIST_PERMIT_TYPE_HASH)
+            abi.encodePacked(signer, labelHash, deadline, DOMAIN_SEPARATOR, Constant.PRIVATE_LABEL_EXIST_PERMIT_TYPE_HASH)
         );
         verifyPermit(params, v, r, s, "vault: label exist permit ERROR");
     }

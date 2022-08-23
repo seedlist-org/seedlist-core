@@ -4,30 +4,31 @@ pragma solidity >= 0.8.12;
 import "./interfaces/ISeed.sol";
 import "./interfaces/IERC20.sol";
 import "./interfaces/ITreasury.sol";
-import "./libraries/SafeMath.sol";
 
 contract Treasury is ITreasury {
-    using SafeMath for uint256;
-
-    //合约的有效部署者
+    //A valid deployer of the contract
     address public owner;
-    //合约的有效调用者，该调用者一旦设置无法重置；
+
+    //A valid caller of the contract;
     address public caller;
-    // Treasury合约开启通证铸造能力，默认关闭；一旦开启，无法重置；
+
+    // The Treasury contract enables the token casting capability, which is disabled by default;
     bool public callable;
 
     address public seedToken;
 
-    //由于采用整数移位减半,会导致末位精度丢失，因此一个周期近似为2121万个tokens被铸造;
-    uint256 MAX_MINTABLE_AMOUNT_IN_CYCLE = 21210000_000000000000000000;
+    //Due to the use of integer shift halving, the precision of the last bit may be lost in the future,
+    //so one cycle is approximately 23.1 million tokens to be minted;
+    uint256 MAX_MINTABLE_AMOUNT_IN_CYCLE = 23100000_000000000000000000;
 
-    //分发给用户的初始量，每个周期会减半；
+    //The initial amount distributed to users will be halved every cycle;
     uint256 GENESIS_MINTABLE_AMOUNT_FOR_USER = 2100_000000000000000000;
 
-    //伴随用户下发行为，下发到treasury合约的token量;
-    uint256 GENESIS_MINTABLE_AMOUNT_FOR_TREASURE = 210_000000000000000000; //bytes: 10110110001001010101110111110101111101010000000010000000000000000000
+    //The amount of tokens issued to the treasury contract along with the user's issuing behavior;
+    //bytes: 10110110001001010101110111110101111101010000000010000000000000000000
+    uint256 GENESIS_MINTABLE_AMOUNT_FOR_TREASURE = 210_000000000000000000;
 
-    //用来标记当前位于哪个铸币周期
+    //Used to mark which minting cycle is currently in
     uint16  public cycle= 0;
 
     constructor(address _seed) {
@@ -36,47 +37,44 @@ contract Treasury is ITreasury {
         callable = false;
     }
 
-    //caller 只能被设置一次且只能被owner设置
-    function setCaller(address _caller) public {
-        require(callable == false, "seedlist: caller has been set");
-        require(msg.sender == owner, "seedlist: only owner can set caller");
+    modifier onlyOwner {
+        require(msg.sender==owner, "Treasury: only owner can do");
+        _;
+    }
+
+    function setCaller(address _caller) onlyOwner public {
         caller = _caller;
         callable = true;
     }
 
     modifier mintable {
-        require(callable == true, "seedlist: caller is invalid");
-        require(msg.sender==caller, "seedlist: only caller can do it");
-        _;
-    }
-
-    modifier onlyOwner {
-        require(msg.sender==owner, "seedlist: only owner can do it");
+        require(callable == true, "Treasury: caller is invalid");
+        require(msg.sender==caller, "Treasury: only caller can do");
         _;
     }
 
     function mint(address receiver) public mintable override returns(bool){
-       //通过totalSupply，计算当前在哪个周期；
+        //calculate which cycle is currently in BY totalSupply;
         uint256 totalSupply = IERC20(seedToken).totalSupply();
 
-       // 如果当前cycle和计算出来的不同，则表明进入了下一个通证周期, 此时更新cycle的值
+        // If the current cycle is different from the calculated one,
+       // it means that the next token cycle is entered, and the value of cycle is updated at this time
         if(totalSupply/MAX_MINTABLE_AMOUNT_IN_CYCLE>cycle){
             cycle = cycle+1;
         }
 
-        require(GENESIS_MINTABLE_AMOUNT_FOR_TREASURE>>cycle > 0, "seedlist: treasury mint stop");
+        require(GENESIS_MINTABLE_AMOUNT_FOR_TREASURE>>cycle > 0, "Treasury: mint stop");
 
         ISeed(seedToken).mint(address(this), GENESIS_MINTABLE_AMOUNT_FOR_TREASURE>>cycle);
 
         ISeed(seedToken).mint(receiver, GENESIS_MINTABLE_AMOUNT_FOR_USER>>cycle);
-
         return true;
     }
 
      receive() external payable {}
 
     function withdraw(address receiver, address tokenAddress, uint256 amount) external onlyOwner returns(bool){
-        require(receiver!=address(0) && tokenAddress!=address(0), "seedlist: ZERO ADDRESS");
+        require(receiver!=address(0) && tokenAddress!=address(0), "Treasury: ZERO ADDRESS");
         IERC20(tokenAddress).transfer(receiver, amount);
         return true;
     }
@@ -87,7 +85,7 @@ contract Treasury is ITreasury {
     }
 
     function transferOwnership(address newOwner) onlyOwner external {
-        require(newOwner!=address(0), "seedlist: newOwner ZERO ADDRESS");
+        require(newOwner!=address(0), "Treasury: ZERO ADDRESS");
         owner = newOwner;
     }
 }

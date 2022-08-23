@@ -8,6 +8,23 @@
 const hre = require("hardhat");
 const { ethers } = require("ethers");
 
+async function mintStart(){
+	const accounts = await hre.ethers.getSigners();
+	const signer = accounts[0];
+	const address = "0xA493b452F73DF2A22C9903fF67d38D5060E9C13C";
+	const Treasury = await hre.ethers.getContractFactory("Treasury");
+	const treasuryContract = new hre.ethers.Contract(address, Treasury.interface, signer);
+	for (let i = 0; i < 1; i++) {
+		let transactionResp = await treasuryContract.mint("0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266");
+		let receipt0 = await transactionResp.wait(1);
+	}
+/*
+	let transactionResp = await treasuryContract.setCaller(vaulthub.address);
+	let receipt0 = await transactionResp.wait(1);
+*/
+	console.log("mint 100000 finished");
+}
+
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
   // line interface.

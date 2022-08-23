@@ -3,7 +3,7 @@ require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-etherscan");
 
 //.secrets format: { "privkey":"....", "alchemyapikey":"...." }
-const { privkey, infura_url, etherscan_apikey } = require("./.secrets.json");
+const { privkey, infura_url, etherscan_apikey,mainnet_url,polygon_url, polygonscan_apikey } = require("./.secrets.json");
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -31,6 +31,7 @@ module.exports = {
 	                evmVersion:"istanbul",
                     optimizer:{
                         enabled:true,
+	                    runs: 250
                     }
                 },
             }
@@ -43,7 +44,20 @@ module.exports = {
 	  gas: 21000000,
 	  gasPrice: 8000000000
     },
-      arbitrum:{
+	  matic: {
+		  url: `${polygon_url}`,
+		  accounts: [`${privkey}`],
+		  gas: 21000000,
+		  gasPrice: 80000000000,
+		  chainId:137
+	  },
+	  mainnet: {
+		  url: `${mainnet_url}`,
+		  accounts: [`${privkey}`],
+		  gas: 21000000,
+		  gasPrice: 8000000000
+	  },
+	  arbitrum:{
         url: "https://rinkeby.arbitrum.io/rpc",
         accounts: [`${privkey}`]
 
@@ -51,7 +65,7 @@ module.exports = {
   },
   // usage: https://www.npmjs.com/package/@nomiclabs/hardhat-etherscan
   etherscan: {
-    apiKey: etherscan_apikey
+    apiKey: polygonscan_apikey
   }
 
 

@@ -26,7 +26,7 @@ contract ERC20 is Context, IERC20, ISeed{
         Satoshi Nakamoto last said "I am not Dorian Nakamoto." at 03/07/2014 on
          http://p2pfoundation.ning.com/forum/topics/bitcoin-open-source?commentId=2003008%3AComment%3A52186
     */
-    uint256 constant MAX_SUPPLY = 1403070000 * (10**18);
+    uint256 constant MAX_SUPPLY = 1570800000 * (10**18);
     /**
      * @dev Sets the values for {name} and {symbol}, initializes {decimals} with
      * a default value of 18.
@@ -42,17 +42,25 @@ contract ERC20 is Context, IERC20, ISeed{
         minted = false;
     }
 
-    function setMinter(address _minter) external {
-        require(minted == false, "SeedToken: minter has been set");
-        require(_minter != address(0), "SeedToken: address is ZERO");
-        require(msg.sender == owner,"SeedToken: only onwer can setting");
+    modifier onlyOwner {
+        require(msg.sender==owner, "Seed: only owner can do it");
+        _;
+    }
+
+    function transferOwnership(address newOwner) onlyOwner external {
+        require(newOwner!=address(0), "Seed: ZERO ADDRESS");
+        owner = newOwner;
+    }
+
+    function setMinter(address _minter) onlyOwner external {
+        require(_minter != address(0), "Seed: address is ZERO");
         minter = _minter;
         minted = true;
     }
 
     modifier mintable {
-        require(minted == true, "SeedToken: minted is invalid");
-        require(msg.sender==minter, "SeedToken: only Minter can do it");
+        require(minted == true, "Seed: minted is invalid");
+        require(msg.sender==minter, "Seed: only Minter can do it");
         _;
     }
 
