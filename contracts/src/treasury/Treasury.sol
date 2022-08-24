@@ -1,9 +1,9 @@
 //SPDX-License-Identifier: MIT
 pragma solidity >= 0.8.12;
 
-import "./interfaces/ISeed.sol";
-import "./interfaces/IERC20.sol";
-import "./interfaces/ITreasury.sol";
+import "../../interfaces/treasury/ISeed.sol";
+import "../../interfaces/treasury/IERC20.sol";
+import "../../interfaces/treasury/ITreasury.sol";
 
 contract Treasury is ITreasury {
     //A valid deployer of the contract

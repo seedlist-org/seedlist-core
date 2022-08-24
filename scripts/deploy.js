@@ -24,6 +24,21 @@ async function mintStart(){
 */
 	console.log("mint 100000 finished");
 }
+async function updateWorker(){
+	const Worker = await hre.ethers.getContractFactory("Worker");
+	const worker = await Worker.deploy();
+	await worker.deployed();
+	console.log("Worker deployed to:", worker.address);
+
+	const accounts = await hre.ethers.getSigners();
+	const signer = accounts[0];
+
+	const Validator = await hre.ethers.getContractFactory("Validator");
+	const validatorContract = new hre.ethers.Contract("0x19ABEEAb413f0b1b3Bf8A9Eb4177CE725B522fA8", Validator.interface, signer);
+	let transactionResp = await validatorContract.updateWorker(worker.address);
+	let receipt0 = await transactionResp.wait(1);
+	console.log("set validator worker finished");
+}
 
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
@@ -45,8 +60,13 @@ async function main() {
   await treasury.deployed();
   console.log("Treasury deployed to:", treasury.address);
 
+  const Validator = await hre.ethers.getContractFactory("Validator");
+  const validator = await Validator.deploy();
+  await validator.deployed();
+  console.log("Validator deployed to:", validator.address);
+
   const VaultHub = await hre.ethers.getContractFactory("VaultHub");
-  const vaulthub = await VaultHub.deploy();
+  const vaulthub = await VaultHub.deploy(validator.address);
   await vaulthub.deployed();
   console.log("VaultHub deployed to:", vaulthub.address);
 

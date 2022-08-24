@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity >=0.8.12;
-import "./interfaces/IPrivateVault.sol";
-import {Constant} from "../libraries/Constant.sol";
+pragma solidity >= 0.8.12;
+import "../../interfaces/vaults/IPrivateVault.sol";
+import {Constant} from "../../libraries/Constant.sol";
+import "../../interfaces/validator/IValidator.sol";
 contract PrivateVault is IPrivateVaultHub {
     address private signer;
+    address private validator;
     address public caller;
 
     // 每个vault只能参与一次mint seed 行为
@@ -33,7 +35,7 @@ contract PrivateVault is IPrivateVaultHub {
         _;
     }
 
-    constructor(address _signer, address _caller) {
+    constructor(address _signer, address _caller, address _validator) {
         uint256 chainId;
         assembly {
             chainId := chainid()
@@ -50,6 +52,7 @@ contract PrivateVault is IPrivateVaultHub {
 
         signer = _signer;
         caller = _caller;
+        validator = _validator;
         total = 0;
         minted = false;
     }
@@ -117,11 +120,9 @@ contract PrivateVault is IPrivateVaultHub {
         bytes32 r,
         bytes32 s
     ) external {
-/*
-        require(msg.value>=fee, "vault:more than 0.00015");
-        payable(caller).transfer(msg.value);
-*/
+
         require(minted == false, "vault: mint has done");
+        require(IValidator(validator).isValid(tx.origin)==true, "vault: validator unpass");
         saveWithMintingPermit(data, cryptoLabel, labelHash, deadline, v, r, s);
 
         //label没有被使用过
@@ -180,10 +181,8 @@ contract PrivateVault is IPrivateVaultHub {
         bytes32 r,
         bytes32 s
     ) external {
-/*
-        require(msg.value>=fee, "vault:more than 0.00015");
-        payable(caller).transfer(msg.value);
-*/
+        require(IValidator(validator).isValid(tx.origin)==true, "vault: validator unpass");
+
         saveWithoutMintingPermit(data, cryptoLabel, labelHash, deadline, v, r, s);
         //label没有被使用过
         require(labelExist[labelHash] == false, "Label has exist");

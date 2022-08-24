@@ -2,9 +2,9 @@
 pragma solidity >=0.8.12;
 
 import { PrivateVault } from "./PrivateVault.sol";
-import { ITreasury } from "./interfaces/ITreasury.sol";
-import "./interfaces/IVaultHub.sol";
-import {Constant} from "../libraries/Constant.sol";
+import { ITreasury } from "../../interfaces/treasury/ITreasury.sol";
+import "../../interfaces/vaults/IVaultHub.sol";
+import {Constant} from "../../libraries/Constant.sol";
 contract VaultHub is IVaultHub {
     enum State {
         INIT_SUCCESS,
@@ -17,9 +17,11 @@ contract VaultHub is IVaultHub {
     address public owner;
     uint256 public fee = 150000000000000;
     bytes32 public DOMAIN_SEPARATOR;
+    address private validator;
 
+    constructor(address _validator) {
+        require(_validator!=address(0));
 
-    constructor() {
         uint256 chainId;
         assembly {
             chainId := chainid()
@@ -35,6 +37,7 @@ contract VaultHub is IVaultHub {
         );
 
         owner = msg.sender;
+        validator = _validator;
     }
 
     function setFee(uint256 _fee) external {
@@ -117,7 +120,7 @@ contract VaultHub is IVaultHub {
     // 判断某个vault-name和password是否被注册
     function _vaultHasRegister(address addr) internal view returns (bool, address) {
         bytes32 salt = keccak256(abi.encodePacked(addr));
-        bytes memory bytecode = abi.encodePacked(type(PrivateVault).creationCode, abi.encode(addr, this));
+        bytes memory bytecode = abi.encodePacked(type(PrivateVault).creationCode, abi.encode(addr, this, validator));
 
         address vault = calculateVaultAddress(salt, bytecode);
 
@@ -151,7 +154,7 @@ contract VaultHub is IVaultHub {
         initPermit(addr, deadline, v, r, s);
         //4. 计算private vault的地址, 记为vaultAddr
         bytes32 salt = keccak256(abi.encodePacked(addr));
-        bytes memory bytecode = abi.encodePacked(type(PrivateVault).creationCode, abi.encode(addr, this));
+        bytes memory bytecode = abi.encodePacked(type(PrivateVault).creationCode, abi.encode(addr, this, validator));
 
         (bool done, ) = _vaultHasRegister(addr);
         require(done == false, "seedlist: vault has been registed");

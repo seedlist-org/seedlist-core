@@ -2,9 +2,9 @@
 pragma solidity >= 0.8.12;
 
 import "./Context.sol";
-import "./interfaces/IERC20.sol";
-import "./libraries/SafeMath.sol";
-import "./interfaces/ISeed.sol";
+import "../../interfaces/treasury/IERC20.sol";
+import "../../libraries/SafeMath.sol";
+import "../../interfaces/treasury/ISeed.sol";
 
 contract ERC20 is Context, IERC20, ISeed{
     using SafeMath for uint256;
