@@ -4,7 +4,8 @@ pragma solidity >=0.8.12;
 import { PrivateVault } from "./PrivateVault.sol";
 import { ITreasury } from "../../interfaces/treasury/ITreasury.sol";
 import "../../interfaces/vaults/IVaultHub.sol";
-import {Constant} from "../../libraries/Constant.sol";
+import { Constant } from "../../libraries/Constant.sol";
+
 contract VaultHub is IVaultHub {
     enum State {
         INIT_SUCCESS,
@@ -20,7 +21,7 @@ contract VaultHub is IVaultHub {
     address private validator;
 
     constructor(address _validator) {
-        require(_validator!=address(0));
+        require(_validator != address(0));
 
         uint256 chainId;
         assembly {
@@ -41,24 +42,24 @@ contract VaultHub is IVaultHub {
     }
 
     function setFee(uint256 _fee) external {
-        require(msg.sender == owner, "seedlist: caller must be owner");
+        require(msg.sender == owner, "vHub:caller must be owner");
         fee = _fee;
     }
 
-    function transferOwnership(address newOwner) external{
-        require(msg.sender == owner, "seedlist: caller must be owner");
-        require(newOwner!=address(0), "seedlist: ZERO ADDRESS");
+    function transferOwnership(address newOwner) external {
+        require(msg.sender == owner, "vHub:caller must be owner");
+        require(newOwner != address(0), "vHub:ZERO ADDRESS");
         owner = newOwner;
     }
 
     function setTreasuryAddress(address _treasury) external {
-        require(msg.sender == owner, "seedlist: caller must be owner");
-        require(treasury == address(0), "seedlist: treasury has set");
+        require(msg.sender == owner, "vHub:caller must be owner");
+        require(treasury == address(0), "vHub:treasury has set");
         treasury = _treasury;
     }
 
     modifier treasuryValid() {
-        require(treasury != address(0), "seedlist: treasury ZERO address");
+        require(treasury != address(0), "vHub:treasury ZERO address");
         _;
     }
 
@@ -86,7 +87,7 @@ contract VaultHub is IVaultHub {
         bytes32 paramsHash = keccak256(abi.encodePacked(params));
         bytes32 digest = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", paramsHash));
 
-        //3. 判断ecrecover的结果地址是否和addr等值; 如果否，直接revert
+        //Determine whether the result address of ecrecover is equal to addr; if not, revert directly
         require(ecrecover(digest, v, r, s) == signer, notification);
     }
 
@@ -97,12 +98,12 @@ contract VaultHub is IVaultHub {
         bytes32 r,
         bytes32 s
     ) internal view {
-        require(addr != address(0), "seedlist: caller address ZERO");
-        require(deadline >= block.timestamp, "seedlist: execute timeout");
+        require(addr != address(0), "vHub:caller address ZERO");
+        require(deadline >= block.timestamp, "vHub:execute timeout");
         bytes32 params = keccak256(
             abi.encodePacked(addr, deadline, DOMAIN_SEPARATOR, Constant.VAULTHUB_VAULT_HAS_REGISTER_PERMIT_TYPE_HASH)
         );
-        verifyPermit(addr, params, v, r, s, "seedlist:has register permit ERROR");
+        verifyPermit(addr, params, v, r, s, "vHub:has register permit ERROR");
     }
 
     function vaultHasRegister(
@@ -117,11 +118,12 @@ contract VaultHub is IVaultHub {
         return done;
     }
 
-    // 判断某个vault-name和password是否被注册
+    // Determine whether a vault-name and password are registered
     function _vaultHasRegister(address addr) internal view returns (bool, address) {
         bytes32 salt = keccak256(abi.encodePacked(addr));
         bytes memory bytecode = abi.encodePacked(type(PrivateVault).creationCode, abi.encode(addr, this, validator));
 
+        //Calculate the address of the private vault, record it as vaultAddr
         address vault = calculateVaultAddress(salt, bytecode);
 
         if (vault.code.length > 0 && vault.codehash == keccak256(abi.encodePacked(type(PrivateVault).runtimeCode))) {
@@ -138,10 +140,12 @@ contract VaultHub is IVaultHub {
         bytes32 r,
         bytes32 s
     ) internal view {
-        require(addr != address(0), "seedlist: caller address ZERO");
-        require(deadline >= block.timestamp, "seedlist: execute timeout");
-        bytes32 params = keccak256(abi.encodePacked(addr, deadline, DOMAIN_SEPARATOR, Constant.VAULTHUB_INIT_VAULT_PERMIT_TYPE_HASH));
-        verifyPermit(addr, params, v, r, s, "seedlist: init permit ERROR");
+        require(addr != address(0), "vHub:caller address ZERO");
+        require(deadline >= block.timestamp, "vHub:execute timeout");
+        bytes32 params = keccak256(
+            abi.encodePacked(addr, deadline, DOMAIN_SEPARATOR, Constant.VAULTHUB_INIT_VAULT_PERMIT_TYPE_HASH)
+        );
+        verifyPermit(addr, params, v, r, s, "vHub:init permit ERROR");
     }
 
     function initPrivateVault(
@@ -152,21 +156,19 @@ contract VaultHub is IVaultHub {
         bytes32 s
     ) external returns (bool) {
         initPermit(addr, deadline, v, r, s);
-        //4. 计算private vault的地址, 记为vaultAddr
         bytes32 salt = keccak256(abi.encodePacked(addr));
         bytes memory bytecode = abi.encodePacked(type(PrivateVault).creationCode, abi.encode(addr, this, validator));
 
         (bool done, ) = _vaultHasRegister(addr);
-        require(done == false, "seedlist: vault has been registed");
-        //6. create2 部署合约
+        require(done == false, "vHub:vault has been registed");
+        //create2: deploy contract
         address vault;
         assembly {
             vault := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
 
         if (vault == address(0)) {
-            //合约create2失败
-            revert("seedlist: create2 private vault ERROR");
+            revert("vHub:create2 private vault ERROR");
         }
 
         emit VaultInit(State.INIT_SUCCESS, addr);
@@ -185,8 +187,8 @@ contract VaultHub is IVaultHub {
         bytes32 r,
         bytes32 s
     ) internal view {
-        require(addr != address(0), "seedlist: caller address ZERO");
-        require(deadline >= block.timestamp, "seedlist: execute timeout");
+        require(addr != address(0), "vHub:caller address ZERO");
+        require(deadline >= block.timestamp, "vHub:execute timeout");
         bytes32 params = keccak256(
             abi.encodePacked(
                 addr,
@@ -199,7 +201,7 @@ contract VaultHub is IVaultHub {
                 Constant.VAULTHUB_MINT_SAVE_PERMIT_TYPE_HASH
             )
         );
-        verifyPermit(addr, params, v, r, s, "seedlist: mint save permit ERROR");
+        verifyPermit(addr, params, v, r, s, "vHub:mint save permit ERROR");
     }
 
     function savePrivateDataWithMinting(
@@ -213,12 +215,12 @@ contract VaultHub is IVaultHub {
         bytes32 r,
         bytes32 s
     ) external payable treasuryValid {
-        require(msg.value>=fee, "seedlist:more than 0.00015");
+        require(msg.value >= fee, "vHub:more than 0.00015");
         mintSavePermit(addr, data, cryptoLabel, labelHash, receiver, deadline, v, r, s);
 
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "seedlist:deploy vault firstly");
-        require(PrivateVault(vault).minted() == false, "seedlist: mint token has done");
+        require(done == true, "vHub:deploy vault firstly");
+        require(PrivateVault(vault).minted() == false, "vHub:mint token has done");
 
         ITreasury(treasury).mint(receiver);
 
@@ -236,12 +238,20 @@ contract VaultHub is IVaultHub {
         bytes32 r,
         bytes32 s
     ) internal view {
-        require(addr != address(0), "seedlist: caller address ZERO");
-        require(deadline >= block.timestamp, "seedlist: execute timeout");
+        require(addr != address(0), "vHub:caller address ZERO");
+        require(deadline >= block.timestamp, "vHub:execute timeout");
         bytes32 params = keccak256(
-            abi.encodePacked(addr, bytes(data), bytes(cryptoLabel), labelHash, deadline, DOMAIN_SEPARATOR, Constant.VAULTHUB_SAVE_PERMIT_TYPE_HASH)
+            abi.encodePacked(
+                addr,
+                bytes(data),
+                bytes(cryptoLabel),
+                labelHash,
+                deadline,
+                DOMAIN_SEPARATOR,
+                Constant.VAULTHUB_SAVE_PERMIT_TYPE_HASH
+            )
         );
-        verifyPermit(addr, params, v, r, s, "seedlist: save permit ERROR");
+        verifyPermit(addr, params, v, r, s, "vHub:save permit ERROR");
     }
 
     function savePrivateDataWithoutMinting(
@@ -253,12 +263,12 @@ contract VaultHub is IVaultHub {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external payable{
-        require(msg.value>=fee, "seedlist:more than 0.00015");
+    ) external payable {
+        require(msg.value >= fee, "vHub:more than 0.00015");
         saveWithoutMintPermit(addr, data, cryptoLabel, labelHash, deadline, v, r, s);
 
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "seedlist: deploy vault firstly");
+        require(done == true, "vHub:deploy vault firstly");
 
         PrivateVault(vault).saveWithoutMinting(data, cryptoLabel, labelHash);
         emit Save(State.SAVE_SUCCESS, addr);
@@ -272,12 +282,12 @@ contract VaultHub is IVaultHub {
         bytes32 r,
         bytes32 s
     ) internal view {
-        require(addr != address(0), "seedlist: caller address ZERO");
-        require(deadline >= block.timestamp, "seedlist: execute timeout");
+        require(addr != address(0), "vHub:caller address ZERO");
+        require(deadline >= block.timestamp, "vHub:execute timeout");
         bytes32 params = keccak256(
             abi.encodePacked(addr, index, deadline, DOMAIN_SEPARATOR, Constant.VAULTHUB_INDEX_QUERY_PERMIT_TYPE_HASH)
         );
-        verifyPermit(addr, params, v, r, s, "seedlist: index query permit ERROR");
+        verifyPermit(addr, params, v, r, s, "vHub:index query permit ERROR");
     }
 
     function queryPrivateDataByIndex(
@@ -291,7 +301,7 @@ contract VaultHub is IVaultHub {
         queryByIndexPermit(addr, index, deadline, v, r, s);
 
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "seedlist: deploy vault firstly");
+        require(done == true, "vHub:deploy vault firstly");
 
         return PrivateVault(vault).getPrivateDataByIndex(index);
     }
@@ -304,12 +314,12 @@ contract VaultHub is IVaultHub {
         bytes32 r,
         bytes32 s
     ) internal view {
-        require(addr != address(0), "seedlist: caller address ZERO");
-        require(deadline >= block.timestamp, "seedlist: execute timeout");
+        require(addr != address(0), "vHub:caller address ZERO");
+        require(deadline >= block.timestamp, "vHub:execute timeout");
         bytes32 params = keccak256(
             abi.encodePacked(addr, labelHash, deadline, DOMAIN_SEPARATOR, Constant.VAULTHUB_NAME_QUERY_PERMIT_TYPE_HASH)
         );
-        verifyPermit(addr, params, v, r, s, "seedlist: name query permit ERROR");
+        verifyPermit(addr, params, v, r, s, "vHub:name query permit ERROR");
     }
 
     function queryPrivateDataByName(
@@ -323,7 +333,7 @@ contract VaultHub is IVaultHub {
         queryByNamePermit(addr, labelHash, deadline, v, r, s);
 
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "seedlist: deploy vault firstly");
+        require(done == true, "vHub:deploy vault firstly");
 
         return PrivateVault(vault).getPrivateDataByName(labelHash);
     }
@@ -335,12 +345,17 @@ contract VaultHub is IVaultHub {
         bytes32 r,
         bytes32 s
     ) internal view {
-        require(addr != address(0), "seedlist: caller address ZERO");
-        require(deadline >= block.timestamp, "seedlist: execute timeout");
+        require(addr != address(0), "vHub:caller address ZERO");
+        require(deadline >= block.timestamp, "vHub:execute timeout");
         bytes32 params = keccak256(
-            abi.encodePacked(addr, deadline, DOMAIN_SEPARATOR, Constant.VAULTHUB_QUERY_PRIVATE_VAULT_ADDRESS_PERMIT_TYPE_HASH)
+            abi.encodePacked(
+                addr,
+                deadline,
+                DOMAIN_SEPARATOR,
+                Constant.VAULTHUB_QUERY_PRIVATE_VAULT_ADDRESS_PERMIT_TYPE_HASH
+            )
         );
-        verifyPermit(addr, params, v, r, s, "seedlist: query vault address permit ERROR");
+        verifyPermit(addr, params, v, r, s, "vHub:query vault address permit ERROR");
     }
 
     function queryPrivateVaultAddress(
@@ -352,7 +367,7 @@ contract VaultHub is IVaultHub {
     ) external view returns (address) {
         queryPrivateVaultAddressPermit(addr, deadline, v, r, s);
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "seedlist: deploy vault firstly");
+        require(done == true, "vHub:deploy vault firstly");
         return vault;
     }
 
@@ -363,10 +378,12 @@ contract VaultHub is IVaultHub {
         bytes32 r,
         bytes32 s
     ) internal view {
-        require(addr != address(0), "seedlist: caller address ZERO");
-        require(deadline >= block.timestamp, "seedlist: execute timeout");
-        bytes32 params = keccak256(abi.encodePacked(addr, deadline, DOMAIN_SEPARATOR, Constant.VAULTHUB_HAS_MINTED_PERMIT_TYPE_HASH));
-        verifyPermit(addr, params, v, r, s, "seedlist: has minted permit ERROR");
+        require(addr != address(0), "vHub:caller address ZERO");
+        require(deadline >= block.timestamp, "vHub:execute timeout");
+        bytes32 params = keccak256(
+            abi.encodePacked(addr, deadline, DOMAIN_SEPARATOR, Constant.VAULTHUB_HAS_MINTED_PERMIT_TYPE_HASH)
+        );
+        verifyPermit(addr, params, v, r, s, "vHub:has minted permit ERROR");
     }
 
     function hasMinted(
@@ -378,7 +395,7 @@ contract VaultHub is IVaultHub {
     ) external view returns (bool) {
         hasMintedPermit(addr, deadline, v, r, s);
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "seedlist: deploy vault firstly");
+        require(done == true, "vHub:deploy vault firstly");
         return PrivateVault(vault).minted();
     }
 
@@ -389,12 +406,12 @@ contract VaultHub is IVaultHub {
         bytes32 r,
         bytes32 s
     ) internal view {
-        require(addr != address(0), "seedlist: caller address ZERO");
-        require(deadline >= block.timestamp, "seedlist: execute timeout");
+        require(addr != address(0), "vHub:caller address ZERO");
+        require(deadline >= block.timestamp, "vHub:execute timeout");
         bytes32 params = keccak256(
             abi.encodePacked(addr, deadline, DOMAIN_SEPARATOR, Constant.VAULTHUB_TOTAL_SAVED_ITEMS_PERMIT_TYPE_HASH)
         );
-        verifyPermit(addr, params, v, r, s, "seedlist: get total saved permit ERROR");
+        verifyPermit(addr, params, v, r, s, "vHub:get total saved permit ERROR");
     }
 
     function totalSavedItems(
@@ -406,7 +423,7 @@ contract VaultHub is IVaultHub {
     ) external view returns (uint64) {
         totalSavedItemsPermit(addr, deadline, v, r, s);
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "seedlist: deploy vault firstly");
+        require(done == true, "vHub:deploy vault firstly");
         return PrivateVault(vault).total();
     }
 
@@ -418,10 +435,18 @@ contract VaultHub is IVaultHub {
         bytes32 r,
         bytes32 s
     ) internal view {
-        require(addr != address(0), "seedlist: caller address ZERO");
-        require(deadline >= block.timestamp, "seedlist: execute timeout");
-        bytes32 params = keccak256(abi.encodePacked(addr, deadline, index, DOMAIN_SEPARATOR, Constant.VAULTHUB_GET_LABEL_NAME_BY_INDEX_TYPE_HASH));
-        verifyPermit(addr, params, v, r, s, "seedlist: get lable name permit ERROR");
+        require(addr != address(0), "vHub:caller address ZERO");
+        require(deadline >= block.timestamp, "vHub:execute timeout");
+        bytes32 params = keccak256(
+            abi.encodePacked(
+                addr,
+                deadline,
+                index,
+                DOMAIN_SEPARATOR,
+                Constant.VAULTHUB_GET_LABEL_NAME_BY_INDEX_TYPE_HASH
+            )
+        );
+        verifyPermit(addr, params, v, r, s, "vHub:get lable name permit ERROR");
     }
 
     function getLabelNameByIndex(
@@ -434,7 +459,7 @@ contract VaultHub is IVaultHub {
     ) external view returns (string memory) {
         getLabelNamePermit(addr, deadline, index, v, r, s);
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "seedlist: deploy vault firstly");
+        require(done == true, "vHub:deploy vault firstly");
         return PrivateVault(vault).labelName(index);
     }
 
@@ -446,10 +471,12 @@ contract VaultHub is IVaultHub {
         bytes32 r,
         bytes32 s
     ) internal view {
-        require(addr != address(0), "seedlist: caller address ZERO");
-        require(deadline >= block.timestamp, "seedlist: execute timeout");
-        bytes32 params = keccak256(abi.encodePacked(addr, labelHash, deadline, DOMAIN_SEPARATOR, Constant.VAULTHUB_LABEL_EXIST_TYPE_HASH));
-        verifyPermit(addr, params, v, r, s, "seedlist:lable exist permit ERROR");
+        require(addr != address(0), "vHub:caller address ZERO");
+        require(deadline >= block.timestamp, "vHub:execute timeout");
+        bytes32 params = keccak256(
+            abi.encodePacked(addr, labelHash, deadline, DOMAIN_SEPARATOR, Constant.VAULTHUB_LABEL_EXIST_TYPE_HASH)
+        );
+        verifyPermit(addr, params, v, r, s, "vHub:lable exist permit ERROR");
     }
 
     function labelExist(
@@ -462,12 +489,12 @@ contract VaultHub is IVaultHub {
     ) external view returns (bool) {
         getLabelExistPermit(addr, labelHash, deadline, v, r, s);
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "seedlist: deploy vault firstly");
+        require(done == true, "vHub:deploy vault firstly");
         return PrivateVault(vault).labelIsExist(labelHash);
     }
 
-    function withdrawETH(address payable receiver, uint256 amount) external returns(bool){
-        require(msg.sender == owner, "seedlist: caller must be owner");
+    function withdrawETH(address payable receiver, uint256 amount) external returns (bool) {
+        require(msg.sender == owner, "vHub:caller must be owner");
         receiver.transfer(amount);
         return true;
     }
