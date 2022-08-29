@@ -85,7 +85,7 @@ contract VaultHub is IVaultHub {
             );
     }
 
-    function vaultHasRegister( //called
+    function vaultHasRegister(
         address addr,
         uint256 deadline,
         uint8 v,
@@ -115,7 +115,7 @@ contract VaultHub is IVaultHub {
         return (false, address(0));
     }
 
-    function initPrivateVault( //called
+    function initPrivateVault(
         address addr,
         uint256 deadline,
         uint8 v,
@@ -147,7 +147,7 @@ contract VaultHub is IVaultHub {
         return true;
     }
 
-    function savePrivateDataWithMinting( //called
+    function savePrivateDataWithMinting(
         address addr,
         string memory data,
         string memory cryptoLabel,
@@ -186,7 +186,7 @@ contract VaultHub is IVaultHub {
         emit Save(State.SAVE_SUCCESS, addr);
     }
 
-    function savePrivateDataWithoutMinting( //called
+    function savePrivateDataWithoutMinting(
         address addr,
         string memory data,
         string memory cryptoLabel,
@@ -239,7 +239,7 @@ contract VaultHub is IVaultHub {
         return PrivateVault(vault).getPrivateDataByIndex(index);
     }
 
-    function queryPrivateDataByName( //called
+    function queryPrivateDataByName(
         address addr,
         address labelHash,
         uint256 deadline,
@@ -267,7 +267,7 @@ contract VaultHub is IVaultHub {
         return PrivateVault(vault).getPrivateDataByName(labelHash);
     }
 
-    function queryPrivateVaultAddress( //called
+    function queryPrivateVaultAddress(
         address addr,
         uint256 deadline,
         uint8 v,
@@ -292,7 +292,7 @@ contract VaultHub is IVaultHub {
         return vault;
     }
 
-    function hasMinted( //called
+    function hasMinted(
         address addr,
         uint256 deadline,
         uint8 v,
@@ -308,7 +308,7 @@ contract VaultHub is IVaultHub {
         return PrivateVault(vault).minted();
     }
 
-    function totalSavedItems( //called
+    function totalSavedItems(
         address addr,
         uint256 deadline,
         uint8 v,
@@ -342,7 +342,7 @@ contract VaultHub is IVaultHub {
         return PrivateVault(vault).labelName(index);
     }
 
-    function labelExist( //called
+    function labelExist(
         address addr,
         address labelHash,
         uint256 deadline,
