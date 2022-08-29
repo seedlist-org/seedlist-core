@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.12;
 import "../../interfaces/vaults/IPrivateVault.sol";
-import { Constant } from "../../libraries/Constant.sol";
+import { Constant,CalleeName } from "../../libraries/Constant.sol";
 import "../../interfaces/validator/IValidator.sol";
 
 contract PrivateVault is IPrivateVaultHub {
@@ -9,6 +9,7 @@ contract PrivateVault is IPrivateVaultHub {
     address private validator;
     address public caller;
 
+    address private permissionLib;
     // Each vault can only participate in the mint seed behavior once
     bool public minted;
 
@@ -26,19 +27,18 @@ contract PrivateVault is IPrivateVaultHub {
 
     uint64 public total;
 
-    uint256 private fee = 150000000000000;
-
     bytes32 public DOMAIN_SEPARATOR;
 
     modifier auth() {
-        require(msg.sender == caller, "vault:caller is invalid");
+        require(msg.sender == caller, "vault:caller invalid");
         _;
     }
 
     constructor(
         address _signer,
         address _caller,
-        address _validator
+        address _validator,
+        address _permissionLib
     ) {
         uint256 chainId;
         assembly {
@@ -57,22 +57,9 @@ contract PrivateVault is IPrivateVaultHub {
         signer = _signer;
         caller = _caller;
         validator = _validator;
+        permissionLib = _permissionLib;
         total = 0;
         minted = false;
-    }
-
-    function verifyPermit(
-        bytes32 params,
-        uint8 v,
-        bytes32 r,
-        bytes32 s,
-        string memory notification
-    ) internal view {
-        bytes32 paramsHash = keccak256(abi.encodePacked(params));
-        bytes32 digest = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", paramsHash));
-
-        //Determine whether the result address of ecrecover is equal to addr; if not, revert directly
-        require(ecrecover(digest, v, r, s) == signer, notification);
     }
 
     //cryptoLabel is encrypt message from Label value
@@ -81,10 +68,10 @@ contract PrivateVault is IPrivateVaultHub {
         string memory cryptoLabel,
         address labelHash
     ) external auth {
-        require(minted == false, "vault:mint has done");
+        require(minted == false, "vault:mint done");
 
         //label was unused
-        require(labelExist[labelHash] == false, "vault:label has exist");
+        require(labelExist[labelHash] == false, "vault:label exist");
 
         store[labelHash] = data;
         labels[total] = labelHash;
@@ -93,30 +80,6 @@ contract PrivateVault is IPrivateVaultHub {
         labelExist[labelHash] = true;
 
         minted = true;
-    }
-
-    function saveWithMintingPermit(
-        string memory data,
-        string memory cryptoLabel,
-        address labelHash,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) internal view {
-        require(deadline >= block.timestamp, "vault:execute timeout");
-        bytes32 params = keccak256(
-            abi.encodePacked(
-                signer,
-                bytes(data),
-                bytes(cryptoLabel),
-                labelHash,
-                deadline,
-                DOMAIN_SEPARATOR,
-                Constant.PRIVATE_SAVE_WITH_MINTING_PERMIT_TYPE_HASH
-            )
-        );
-        verifyPermit(params, v, r, s, "vault:minting permit ERROR");
     }
 
     function saveWithMintingDirectly(
@@ -128,12 +91,15 @@ contract PrivateVault is IPrivateVaultHub {
         bytes32 r,
         bytes32 s
     ) external {
-        require(minted == false, "vault:mint has done");
+        require(minted == false, "vault:mint done");
         require(IValidator(validator).isValid(tx.origin) == true, "vault: validator unpass");
-        saveWithMintingPermit(data, cryptoLabel, labelHash, deadline, v, r, s);
+        (bool res, ) = permissionLib.staticcall(
+            abi.encodeWithSelector(CalleeName.SAVE_WITH_MINTING_PERMIT, signer,
+            data, cryptoLabel, labelHash, deadline, v, r, s, DOMAIN_SEPARATOR));
+        require(res == true, "vault:mint ERROR");
 
         //label was unused
-        require(labelExist[labelHash] == false, "vault:label has exist");
+        require(labelExist[labelHash] == false, "vault:label exist");
 
         store[labelHash] = data;
         labels[total] = labelHash;
@@ -144,43 +110,18 @@ contract PrivateVault is IPrivateVaultHub {
         minted = true;
     }
 
-    ////////////////////////////
     function saveWithoutMinting(
         string memory data,
         string memory cryptoLabel,
         address labelHash
     ) external auth {
         //label was unused
-        require(labelExist[labelHash] == false, "vault:label has exist");
+        require(labelExist[labelHash] == false, "vault:label exist");
         store[labelHash] = data;
         labels[total] = labelHash;
         hashToLabel[labelHash] = cryptoLabel;
         total++;
         labelExist[labelHash] = true;
-    }
-
-    function saveWithoutMintingPermit(
-        string memory data,
-        string memory cryptoLabel,
-        address labelHash,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) internal view {
-        require(deadline >= block.timestamp, "vault:execute timeout");
-        bytes32 params = keccak256(
-            abi.encodePacked(
-                signer,
-                bytes(data),
-                bytes(cryptoLabel),
-                labelHash,
-                deadline,
-                DOMAIN_SEPARATOR,
-                Constant.PRIVATE_SAVE_WITHOUT_MINTING_PERMIT_TYPE_HASH
-            )
-        );
-        verifyPermit(params, v, r, s, "vault:minting permit ERROR");
     }
 
     function saveWithoutMintingDirectly(
@@ -193,10 +134,13 @@ contract PrivateVault is IPrivateVaultHub {
         bytes32 s
     ) external {
         require(IValidator(validator).isValid(tx.origin) == true, "vault: validator unpass");
+        (bool res, ) = permissionLib.staticcall(
+            abi.encodeWithSelector(CalleeName.SAVE_WITHOUT_MINTING_PERMIT, signer,
+            data, cryptoLabel, labelHash, deadline, v, r, s, DOMAIN_SEPARATOR));
+        require(res == true, "vault:without ERROR");
 
-        saveWithoutMintingPermit(data, cryptoLabel, labelHash, deadline, v, r, s);
         //label was unused
-        require(labelExist[labelHash] == false, "vault:label has exist");
+        require(labelExist[labelHash] == false, "vault:label exist");
         store[labelHash] = data;
         labels[total] = labelHash;
         hashToLabel[labelHash] = cryptoLabel;
@@ -204,30 +148,9 @@ contract PrivateVault is IPrivateVaultHub {
         labelExist[labelHash] = true;
     }
 
-    ////////////////////////////
     function getPrivateDataByIndex(uint64 index) external view auth returns (string memory) {
-        require(total > index, "vault:labels keys overflow");
+        require(total > index, "vault:keys overflow");
         return store[labels[index]];
-    }
-
-    function getPrivateDataByIndexPermit(
-        uint64 index,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) internal view {
-        require(deadline >= block.timestamp, "vault:execute timeout");
-        bytes32 params = keccak256(
-            abi.encodePacked(
-                signer,
-                index,
-                deadline,
-                DOMAIN_SEPARATOR,
-                Constant.PRIVATE_GET_PRIVATE_DATA_BY_INDEX_PERMIT_TYPE_HASH
-            )
-        );
-        verifyPermit(params, v, r, s, "vault:index label permit ERROR");
     }
 
     function getPrivateDataByIndexDirectly(
@@ -237,36 +160,20 @@ contract PrivateVault is IPrivateVaultHub {
         bytes32 r,
         bytes32 s
     ) external view returns (string memory) {
-        require(total > index, "vault:data keys overflow");
-        getPrivateDataByIndexPermit(index, deadline, v, r, s);
+        require(total > index, "vault:keys overflow");
+
+        (bool res, ) = permissionLib.staticcall(
+            abi.encodeWithSelector(CalleeName.GET_PRIVATE_DATA_BY_INDEX_PERMIT, signer,
+            index, deadline, v, r, s, DOMAIN_SEPARATOR));
+        require(res == true, "vault:index ERROR");
+
         return store[labels[index]];
     }
 
-    ////////////////////////////
     function getPrivateDataByName(address name) external view auth returns (string memory) {
         require(labelExist[name] == true, "vault:label no exist");
 
         return store[name];
-    }
-
-    function getPrivateDataByNamePermit(
-        address name,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) internal view {
-        require(deadline >= block.timestamp, "vault:execute timeout");
-        bytes32 params = keccak256(
-            abi.encodePacked(
-                signer,
-                name,
-                deadline,
-                DOMAIN_SEPARATOR,
-                Constant.PRIVATE_GET_PRIVATE_DATA_BY_NAME_PERMIT_TYPE_HASH
-            )
-        );
-        verifyPermit(params, v, r, s, "vault:get data by name permit ERROR");
     }
 
     function getPrivateDataByNameDirectly(
@@ -276,30 +183,19 @@ contract PrivateVault is IPrivateVaultHub {
         bytes32 r,
         bytes32 s
     ) external view returns (string memory) {
-        getPrivateDataByNamePermit(name, deadline, v, r, s);
+        (bool res, ) = permissionLib.staticcall(
+            abi.encodeWithSelector(CalleeName.GET_PRIVATE_DATA_BY_NAME_PERMIT, signer,
+            name, deadline, v, r, s, DOMAIN_SEPARATOR));
+        require(res == true, "vault:name ERROR");
+
         require(labelExist[name] == true, "vaule:label no exist");
 
         return store[name];
     }
 
-    ////////////////////////////
     function labelName(uint64 index) external view auth returns (string memory) {
         require(index < total);
         return hashToLabel[labels[index]];
-    }
-
-    function labelNamePermit(
-        uint64 index,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) internal view {
-        require(deadline >= block.timestamp, "vault:execute timeout");
-        bytes32 params = keccak256(
-            abi.encodePacked(signer, index, deadline, DOMAIN_SEPARATOR, Constant.PRIVATE_LABEL_NAME_PERMIT_TYPE_HASH)
-        );
-        verifyPermit(params, v, r, s, "vault:label name permit ERROR");
     }
 
     function labelNameDirectly(
@@ -310,34 +206,17 @@ contract PrivateVault is IPrivateVaultHub {
         bytes32 s
     ) external view returns (string memory) {
         require(index < total);
-        labelNamePermit(index, deadline, v, r, s);
+        (bool res, ) = permissionLib.staticcall(
+            abi.encodeWithSelector(CalleeName.LABEL_NAME_PERMIT, signer,
+            index, deadline, v, r, s, DOMAIN_SEPARATOR));
+        require(res == true, "vault:lname ERROR");
+
         return hashToLabel[labels[index]];
     }
 
-    //////////////////////////////////////////
     function labelIsExist(address labelHash) external view auth returns (bool) {
         bool exist = labelExist[labelHash];
         return exist;
-    }
-
-    function labelIsExistPermit(
-        address labelHash,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) internal view {
-        require(deadline >= block.timestamp, "vault:execute timeout");
-        bytes32 params = keccak256(
-            abi.encodePacked(
-                signer,
-                labelHash,
-                deadline,
-                DOMAIN_SEPARATOR,
-                Constant.PRIVATE_LABEL_EXIST_PERMIT_TYPE_HASH
-            )
-        );
-        verifyPermit(params, v, r, s, "vault:label exist permit ERROR");
     }
 
     function labelIsExistDirectly(
@@ -347,7 +226,10 @@ contract PrivateVault is IPrivateVaultHub {
         bytes32 r,
         bytes32 s
     ) external view returns (bool) {
-        labelIsExistPermit(labelHash, deadline, v, r, s);
+        (bool res, ) = permissionLib.staticcall(
+            abi.encodeWithSelector(CalleeName.LABEL_IS_EXIST_PERMIT, signer,
+            labelHash, deadline, v, r, s, DOMAIN_SEPARATOR));
+        require(res == true, "vault:exist ERROR");
         return labelExist[labelHash];
     }
 }

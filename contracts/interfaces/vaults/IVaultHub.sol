@@ -9,7 +9,7 @@ interface IVaultHub {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external view returns (bool);
+    ) external returns (bool);
 
     function initPrivateVault(
         address addr,

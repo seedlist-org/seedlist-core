@@ -1,6 +1,34 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.12;
 
+library CalleeName {
+    //把字符串全部换成 bytes4
+    //abi.encodeWithSignature(string memory signature, ...) returns (bytes memory):
+    //等于 abi.encodeWithSelector(bytes4(keccak256(bytes(signature)), ...)
+
+
+    //vault hub used
+    bytes4 public constant HAS_REGISTER_PERMIT = 0xf2ae01de;
+    bytes4 public constant INIT_PERMIT = 0x560ee72b;
+    bytes4 public constant GET_LABEL_EXIST_PERMIT = 0x15960843;
+    bytes4 public constant GET_LABEL_NAME_PERMIT = 0x94f82d81;
+    bytes4 public constant TOTAL_SAVED_ITEMS_PERMIT = 0x15b2755f;
+    bytes4 public constant HAS_MINTED_PERMIT = 0x1a49dda4;
+    bytes4 public constant QUERY_PRIVATE_VAULT_ADDRESS_PERMIT = 0x01c190bd;
+    bytes4 public constant QUERY_BY_NAME_PERMIT = 0x79861a05;
+    bytes4 public constant QUERY_BY_INDEX_PERMIT = 0xd5d76538;
+    bytes4 public constant SAVE_WITHOUT_MINT_PERMIT = 0xdd181b56;
+    bytes4 public constant MINT_SAVE_PERMIT = 0x95781f1f;
+
+    // private vault used
+    bytes4 public constant LABEL_IS_EXIST_PERMIT = 0x727faffc;
+    bytes4 public constant LABEL_NAME_PERMIT = 0x1046f7f9;
+    bytes4 public constant GET_PRIVATE_DATA_BY_NAME_PERMIT = 0x3eeaa953;
+    bytes4 public constant GET_PRIVATE_DATA_BY_INDEX_PERMIT = 0x01f8e063;
+    bytes4 public constant SAVE_WITHOUT_MINTING_PERMIT = 0x64b3f6be;
+    bytes4 public constant SAVE_WITH_MINTING_PERMIT = 0xbffdf06f;
+}
+
 library Constant {
     string public constant PRIVATE_DOMAIN_NAME = "privateVault@seedlist.org";
     string public constant PRIVATE_DOMAIN_VERSION = "1.0.0";

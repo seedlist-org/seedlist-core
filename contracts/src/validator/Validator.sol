@@ -13,7 +13,7 @@ contract Validator is IValidator {
 
     function transferOwnership(address newOwner) external {
         require(msg.sender == owner, "Validator:auth invalid");
-        require(newOwner != address(0),"Validator:ZERO address");
+        require(newOwner != address(0), "Validator:ZERO address");
         owner = newOwner;
     }
 
@@ -24,7 +24,7 @@ contract Validator is IValidator {
     }
 
     function isValid(address sender) external returns (bool) {
-        require(sender != address(0),"Validator:ZERO address");
+        require(sender != address(0), "Validator:ZERO address");
         if (worker == address(0)) {
             return false;
         }

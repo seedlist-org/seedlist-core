@@ -24,6 +24,7 @@ async function mintStart(){
 */
 	console.log("mint 100000 finished");
 }
+
 async function updateWorker(){
 	const Worker = await hre.ethers.getContractFactory("Worker");
 	const worker = await Worker.deploy();
@@ -34,12 +35,11 @@ async function updateWorker(){
 	const signer = accounts[0];
 
 	const Validator = await hre.ethers.getContractFactory("Validator");
-	const validatorContract = new hre.ethers.Contract("0x19ABEEAb413f0b1b3Bf8A9Eb4177CE725B522fA8", Validator.interface, signer);
+	const validatorContract = new hre.ethers.Contract("0x025567e4761a0945C17C6cF13e55dCbcf4A9AA2b", Validator.interface, signer);
 	let transactionResp = await validatorContract.updateWorker(worker.address);
 	let receipt0 = await transactionResp.wait(1);
 	console.log("set validator worker finished");
 }
-
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
   // line interface.
@@ -49,6 +49,18 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
+  const accounts = await hre.ethers.getSigners();
+  const signer = accounts[0];
+  const VaultHubPermission = await hre.ethers.getContractFactory("VaultHubPermission");
+  const vPermission = await VaultHubPermission.deploy();
+  await vPermission.deployed();
+  console.log("Permission deploy to:", vPermission.address );
+
+	const PrivateVaultPermission = await hre.ethers.getContractFactory("PrivateVaultPermission");
+	const pPermission = await PrivateVaultPermission.deploy();
+	await pPermission.deployed();
+	console.log("PrivateVault Permission deploy to:", pPermission.address);
+
   const Seeder = await hre.ethers.getContractFactory("SeedToken");
   const seeder = await Seeder.deploy();
   await seeder.deployed();
@@ -65,13 +77,21 @@ async function main() {
   await validator.deployed();
   console.log("Validator deployed to:", validator.address);
 
+  const Worker = await hre.ethers.getContractFactory("Worker");
+  const worker = await Worker.deploy();
+  await worker.deployed();
+  console.log("Worker deployed to:", worker.address);
+
+  const validatorContract = new hre.ethers.Contract(validator.address, Validator.interface, signer);
+  let transactionResp = await validatorContract.updateWorker(worker.address);
+  let receipt0 = await transactionResp.wait(1);
+  console.log("set validator worker finished");
+
   const VaultHub = await hre.ethers.getContractFactory("VaultHub");
-  const vaulthub = await VaultHub.deploy(validator.address);
+  const vaulthub = await VaultHub.deploy(validator.address, vPermission.address, pPermission.address);
   await vaulthub.deployed();
   console.log("VaultHub deployed to:", vaulthub.address);
 
-  const accounts = await hre.ethers.getSigners();
-  const signer = accounts[0];
   const seedToken = new hre.ethers.Contract(seeder.address, Seeder.interface, signer);
 
   let transactionResponse = await seedToken.setMinter(treasury.address);
@@ -79,8 +99,8 @@ async function main() {
   console.log("set minter for seedlist token finished");
 
   const treasuryContract = new hre.ethers.Contract(treasury.address, Treasury.interface, signer);
-  let transactionResp = await treasuryContract.setCaller(vaulthub.address);
-  let receipt0 = await transactionResp.wait(1);
+  transactionResp = await treasuryContract.setCaller(vaulthub.address);
+  receipt0 = await transactionResp.wait(1);
   console.log("set caller for treasury finished");
 
   const vaultHubContract = new hre.ethers.Contract(vaulthub.address, VaultHub.interface, signer);
