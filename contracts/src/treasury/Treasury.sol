@@ -17,6 +17,11 @@ contract Treasury is ITreasury {
 
     address public seedToken;
 
+    uint256 public lastWithdrawAmount = 0;
+    uint64  public withdrawCnt = 0;
+    //if true, means starting the halving withdrawal mode
+    bool public enableHalf = false;
+
     //Due to the use of integer shift halving, the precision of the last bit may be lost in the future,
     //so one cycle is approximately 23.1 million tokens to be minted;
     uint256 MAX_MINTABLE_AMOUNT_IN_CYCLE = 23100000_000000000000000000;
@@ -73,12 +78,33 @@ contract Treasury is ITreasury {
 
     receive() external payable {}
 
+    function setHalf(bool enable) external onlyOwner returns(bool){
+        enableHalf = enable;
+        return true;
+    }
+
     function withdraw(
         address receiver,
         address tokenAddress,
         uint256 amount
     ) external onlyOwner returns (bool) {
         require(receiver != address(0) && tokenAddress != address(0), "Treasury: ZERO ADDRESS");
+        //The amount of each withdrawal does not exceed the normal amount of the previous amount,
+        //When the number of withdrawals is not zero and the withdrawal amount is zero,
+        //it means abandoning the withdrawal of SEED token
+        if(tokenAddress==seedToken && enableHalf==true){
+            if(withdrawCnt>0 && lastWithdrawAmount==0){
+                return false;
+            }
+            if(withdrawCnt>0 && amount>lastWithdrawAmount>>1){
+                amount = lastWithdrawAmount>>1;
+            }
+
+            lastWithdrawAmount = amount;
+            withdrawCnt = withdrawCnt+1;
+        }
+
+        require(IERC20(tokenAddress).balanceOf(address(this))>=amount, "Treasury: amount invalid");
         IERC20(tokenAddress).transfer(receiver, amount);
         return true;
     }
