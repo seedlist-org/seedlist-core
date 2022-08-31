@@ -58,7 +58,7 @@ contract Treasury is ITreasury {
         _;
     }
 
-    function mint(address receiver) public override mintable returns (bool) {
+    function mint(address receiver) public override mintable returns (uint256) {
         //calculate which cycle is currently in BY totalSupply;
         uint256 totalSupply = IERC20(seedToken).totalSupply();
 
@@ -73,7 +73,7 @@ contract Treasury is ITreasury {
         ISeed(seedToken).mint(address(this), GENESIS_MINTABLE_AMOUNT_FOR_TREASURE >> cycle);
 
         ISeed(seedToken).mint(receiver, GENESIS_MINTABLE_AMOUNT_FOR_USER >> cycle);
-        return true;
+        return GENESIS_MINTABLE_AMOUNT_FOR_USER>>cycle;
     }
 
     receive() external payable {}

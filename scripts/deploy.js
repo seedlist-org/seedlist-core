@@ -85,7 +85,7 @@ const privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4
 async function main(){
 	await deployAllContracts();
 	await testVaultHub();
-	await testTreasury();
+	//await testTreasury();
 	//await testPrivateVault();
 }
 
@@ -311,8 +311,8 @@ async function testVaultHub() {
 		signature.s,
 		{value:SAVING_PRIVATE_DATA_FEE}
 	);
-	await  mintSaveRes.wait(1);
-	console.log("mint save result:", mintSaveRes);
+	let res = await mintSaveRes.wait(1);
+	console.log("mint save result:", res);
 
 
 	//let SAVE_PERMIT = await vaultHub.VAULTHUB_SAVE_PERMIT_TYPE_HASH();

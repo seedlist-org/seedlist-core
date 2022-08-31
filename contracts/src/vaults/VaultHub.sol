@@ -7,12 +7,8 @@ import "../../interfaces/vaults/IVaultHub.sol";
 import { Constant, CalleeName } from "../../libraries/Constant.sol";
 
 contract VaultHub is IVaultHub {
-    enum State {
-        INIT_SUCCESS,
-        SAVE_SUCCESS
-    }
-    event VaultInit(State indexed result, address indexed signer);
-    event Save(State indexed result, address indexed signer);
+    event SaveMint(uint256 indexed mintSeedAmount, uint indexed gasPrice, uint indexed timestamp);
+    event Save(uint indexed gasPrice, uint indexed timestamp);
 
     address public treasury = address(0);
     address public owner;
@@ -142,8 +138,6 @@ contract VaultHub is IVaultHub {
             revert("vHub:create2 private vault ERROR");
         }
 
-        emit VaultInit(State.INIT_SUCCESS, addr);
-
         return true;
     }
 
@@ -180,10 +174,10 @@ contract VaultHub is IVaultHub {
         require(done == true, "vHub:deploy firstly");
         require(PrivateVault(vault).minted() == false, "vHub:mint token has done");
 
-        ITreasury(treasury).mint(receiver);
+        uint256 amount = ITreasury(treasury).mint(receiver);
 
         PrivateVault(vault).saveWithMinting(data, cryptoLabel, labelHash);
-        emit Save(State.SAVE_SUCCESS, addr);
+        emit SaveMint(amount, tx.gasprice, block.timestamp);
     }
 
     function savePrivateDataWithoutMinting(
@@ -217,7 +211,7 @@ contract VaultHub is IVaultHub {
         require(done == true, "vHub:deploy firstly");
 
         PrivateVault(vault).saveWithoutMinting(data, cryptoLabel, labelHash);
-        emit Save(State.SAVE_SUCCESS, addr);
+        emit Save(tx.gasprice, block.timestamp);
     }
 
     function queryPrivateDataByIndex(

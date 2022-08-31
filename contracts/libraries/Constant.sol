@@ -2,12 +2,7 @@
 pragma solidity >=0.8.12;
 
 library CalleeName {
-    //把字符串全部换成 bytes4
-    //abi.encodeWithSignature(string memory signature, ...) returns (bytes memory):
-    //等于 abi.encodeWithSelector(bytes4(keccak256(bytes(signature)), ...)
-
-
-    //vault hub used
+    //vault hub used;  bytes4(keccak256(bytes(signature)))
     bytes4 public constant HAS_REGISTER_PERMIT = 0xf2ae01de;
     bytes4 public constant INIT_PERMIT = 0x560ee72b;
     bytes4 public constant GET_LABEL_EXIST_PERMIT = 0x15960843;
