@@ -4,7 +4,7 @@ pragma solidity >=0.8.12;
 import { PrivateVault } from "./PrivateVault.sol";
 import { ITreasury } from "../../interfaces/treasury/ITreasury.sol";
 import "../../interfaces/vaults/IVaultHub.sol";
-import { Constant, CalleeName } from "../../libraries/Constant.sol";
+import { VaultHubTypeHashs, VaultHubCallee } from "../../libraries/Constants.sol";
 
 contract VaultHub is IVaultHub {
     event SaveMint(uint256 indexed mintSeedAmount, uint256 indexed gasPrice, uint256 indexed timestamp);
@@ -32,9 +32,9 @@ contract VaultHub is IVaultHub {
         }
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
-                Constant.VAULTHUB_DOMAIN_TYPE_HASH,
-                keccak256(bytes(Constant.VAULTHUB_DOMAIN_NAME)),
-                keccak256(bytes(Constant.VAULTHUB_DOMAIN_VERSION)),
+                VaultHubTypeHashs.VAULTHUB_DOMAIN_TYPE_HASH,
+                keccak256(bytes(VaultHubTypeHashs.VAULTHUB_DOMAIN_NAME)),
+                keccak256(bytes(VaultHubTypeHashs.VAULTHUB_DOMAIN_VERSION)),
                 chainId,
                 address(this)
             )
@@ -89,7 +89,7 @@ contract VaultHub is IVaultHub {
         bytes32 s
     ) external view returns (bool) {
         (bool res, ) = vaultHubPermissionLib.staticcall(
-            abi.encodeWithSelector(CalleeName.HAS_REGISTER_PERMIT, addr, deadline, v, r, s, DOMAIN_SEPARATOR)
+            abi.encodeWithSelector(VaultHubCallee.HAS_REGISTER_PERMIT, addr, deadline, v, r, s, DOMAIN_SEPARATOR)
         );
         require(res == true);
         (bool done, ) = _vaultHasRegister(addr);
@@ -122,7 +122,7 @@ contract VaultHub is IVaultHub {
         bytes32 s
     ) external returns (bool) {
         (bool res, ) = vaultHubPermissionLib.staticcall(
-            abi.encodeWithSelector(CalleeName.INIT_PERMIT, addr, deadline, v, r, s, DOMAIN_SEPARATOR)
+            abi.encodeWithSelector(VaultHubCallee.INIT_PERMIT, addr, deadline, v, r, s, DOMAIN_SEPARATOR)
         );
         require(res == true);
 
@@ -161,7 +161,7 @@ contract VaultHub is IVaultHub {
         require(msg.value >= fee, "vHub:fee");
         (bool res, ) = vaultHubPermissionLib.staticcall(
             abi.encodeWithSelector(
-                CalleeName.MINT_SAVE_PERMIT,
+                VaultHubCallee.MINT_SAVE_PERMIT,
                 addr,
                 data,
                 cryptoLabel,
@@ -199,7 +199,7 @@ contract VaultHub is IVaultHub {
         require(msg.value >= fee, "vHub:fee");
         (bool res, ) = vaultHubPermissionLib.staticcall(
             abi.encodeWithSelector(
-                CalleeName.SAVE_WITHOUT_MINT_PERMIT,
+                VaultHubCallee.SAVE_WITHOUT_MINT_PERMIT,
                 addr,
                 data,
                 cryptoLabel,
@@ -229,7 +229,7 @@ contract VaultHub is IVaultHub {
         bytes32 s
     ) external view returns (string memory) {
         (bool res, ) = vaultHubPermissionLib.staticcall(
-            abi.encodeWithSelector(CalleeName.QUERY_BY_INDEX_PERMIT, addr, index, deadline, v, r, s, DOMAIN_SEPARATOR)
+            abi.encodeWithSelector(VaultHubCallee.QUERY_BY_INDEX_PERMIT, addr, index, deadline, v, r, s, DOMAIN_SEPARATOR)
         );
         require(res == true);
 
@@ -249,7 +249,7 @@ contract VaultHub is IVaultHub {
     ) external view returns (string memory) {
         (bool res, ) = vaultHubPermissionLib.staticcall(
             abi.encodeWithSelector(
-                CalleeName.QUERY_BY_NAME_PERMIT,
+                VaultHubCallee.QUERY_BY_NAME_PERMIT,
                 addr,
                 labelHash,
                 deadline,
@@ -276,7 +276,7 @@ contract VaultHub is IVaultHub {
     ) external view returns (address) {
         (bool res, ) = vaultHubPermissionLib.staticcall(
             abi.encodeWithSelector(
-                CalleeName.QUERY_PRIVATE_VAULT_ADDRESS_PERMIT,
+                VaultHubCallee.QUERY_PRIVATE_VAULT_ADDRESS_PERMIT,
                 addr,
                 deadline,
                 v,
@@ -300,7 +300,7 @@ contract VaultHub is IVaultHub {
         bytes32 s
     ) external view returns (bool) {
         (bool res, ) = vaultHubPermissionLib.staticcall(
-            abi.encodeWithSelector(CalleeName.HAS_MINTED_PERMIT, addr, deadline, v, r, s, DOMAIN_SEPARATOR)
+            abi.encodeWithSelector(VaultHubCallee.HAS_MINTED_PERMIT, addr, deadline, v, r, s, DOMAIN_SEPARATOR)
         );
         require(res == true);
         (bool done, address vault) = _vaultHasRegister(addr);
@@ -316,7 +316,7 @@ contract VaultHub is IVaultHub {
         bytes32 s
     ) external view returns (uint64) {
         (bool res, ) = vaultHubPermissionLib.staticcall(
-            abi.encodeWithSelector(CalleeName.TOTAL_SAVED_ITEMS_PERMIT, addr, deadline, v, r, s, DOMAIN_SEPARATOR)
+            abi.encodeWithSelector(VaultHubCallee.TOTAL_SAVED_ITEMS_PERMIT, addr, deadline, v, r, s, DOMAIN_SEPARATOR)
         );
         require(res == true);
 
@@ -334,7 +334,7 @@ contract VaultHub is IVaultHub {
         bytes32 s
     ) external view returns (string memory) {
         (bool res, ) = vaultHubPermissionLib.staticcall(
-            abi.encodeWithSelector(CalleeName.GET_LABEL_NAME_PERMIT, addr, deadline, index, v, r, s, DOMAIN_SEPARATOR)
+            abi.encodeWithSelector(VaultHubCallee.GET_LABEL_NAME_PERMIT, addr, deadline, index, v, r, s, DOMAIN_SEPARATOR)
         );
         require(res == true);
         (bool done, address vault) = _vaultHasRegister(addr);
@@ -352,7 +352,7 @@ contract VaultHub is IVaultHub {
     ) external view returns (bool) {
         (bool res, ) = vaultHubPermissionLib.staticcall(
             abi.encodeWithSelector(
-                CalleeName.GET_LABEL_EXIST_PERMIT,
+                VaultHubCallee.GET_LABEL_EXIST_PERMIT,
                 addr,
                 labelHash,
                 deadline,
