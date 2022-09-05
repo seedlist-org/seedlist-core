@@ -2,5 +2,5 @@
 pragma solidity >=0.8.12;
 
 interface IWorker {
-    function run(address user) external returns (bool);
+    function run(bytes memory params) external returns (bool);
 }

@@ -36,7 +36,7 @@ library VaultHubPermission {
         Verifier.verifyPermit(addr, params, v, r, s, "vHub:init permit ERROR");
     }
 
-function mintSavePermit(
+    function mintSavePermit(
         address addr,
         string memory data,
         string memory cryptoLabel,
@@ -221,6 +221,29 @@ function mintSavePermit(
 }
 
 library PrivateVaultPermission {
+    function updateValidatorPermit(
+        address addr,
+        address validator,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s,
+        bytes32 DOMAIN_SEPARATOR
+    ) external view {
+        require(deadline >= block.timestamp, "vault:execute timeout");
+        bytes32 params = keccak256(
+            abi.encodePacked(
+                addr,
+                validator,
+                deadline,
+                DOMAIN_SEPARATOR,
+                Constant.PRIVATE_UPDATE_VALIDATOR_PERMIT_TYPE_HASH
+            )
+        );
+        Verifier.verifyPermit(addr, params, v, r, s, "vault:minting permit ERROR");
+    }
+
+    /*
     function saveWithMintingPermit(
         address addr,
         string memory data,
@@ -247,10 +270,12 @@ library PrivateVaultPermission {
         Verifier.verifyPermit(addr, params, v, r, s, "vault:minting permit ERROR");
     }
 
+*/
     function saveWithoutMintingPermit(
         address addr,
         string memory data,
         string memory cryptoLabel,
+        bytes memory _params,
         address labelHash,
         uint256 deadline,
         uint8 v,
@@ -264,6 +289,7 @@ library PrivateVaultPermission {
                 addr,
                 bytes(data),
                 bytes(cryptoLabel),
+                _params,
                 labelHash,
                 deadline,
                 DOMAIN_SEPARATOR,

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.12;
 import "../../interfaces/vaults/IPrivateVault.sol";
-import { Constant,CalleeName } from "../../libraries/Constant.sol";
+import { Constant, CalleeName } from "../../libraries/Constant.sol";
 import "../../interfaces/validator/IValidator.sol";
 
 contract PrivateVault is IPrivateVaultHub {
@@ -28,6 +28,8 @@ contract PrivateVault is IPrivateVaultHub {
     uint64 public total;
 
     bytes32 public DOMAIN_SEPARATOR;
+
+    address private privateValidator;
 
     modifier auth() {
         require(msg.sender == caller, "vault:caller invalid");
@@ -62,6 +64,30 @@ contract PrivateVault is IPrivateVaultHub {
         minted = false;
     }
 
+    function updateValidator(
+        address _privateValidator,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external {
+        (bool res, ) = permissionLib.staticcall(
+            abi.encodeWithSelector(
+                CalleeName.UPDATE_VALIDATOR_PERMIT,
+                signer,
+                _privateValidator,
+                deadline,
+                v,
+                r,
+                s,
+                DOMAIN_SEPARATOR
+            )
+        );
+        require(res == true, "vault:update Error");
+
+        privateValidator = _privateValidator;
+    }
+
     //cryptoLabel is encrypt message from Label value
     function saveWithMinting(
         string memory data,
@@ -82,6 +108,7 @@ contract PrivateVault is IPrivateVaultHub {
         minted = true;
     }
 
+    /*
     function saveWithMintingDirectly(
         string memory data,
         string memory cryptoLabel,
@@ -89,14 +116,29 @@ contract PrivateVault is IPrivateVaultHub {
         uint256 deadline,
         uint8 v,
         bytes32 r,
-        bytes32 s
+        bytes32 s,
+        bytes memory params
     ) external {
         require(minted == false, "vault:mint done");
-        require(IValidator(validator).isValid(tx.origin) == true, "vault: validator unpass");
+        require(IValidator(validator).isValid(params) == true, "vault: validator unpass");
+        if (privateValidator != address(0)) {
+            require(IValidator(privateValidator).isValid(params) == true);
+        }
         (bool res, ) = permissionLib.staticcall(
-            abi.encodeWithSelector(CalleeName.SAVE_WITH_MINTING_PERMIT, signer,
-            data, cryptoLabel, labelHash, deadline, v, r, s, DOMAIN_SEPARATOR));
-        require(res == true, "vault:mint ERROR");
+            abi.encodeWithSelector(
+                CalleeName.SAVE_WITH_MINTING_PERMIT,
+                signer,
+                data,
+                cryptoLabel,
+                labelHash,
+                deadline,
+                v,
+                r,
+                s,
+                DOMAIN_SEPARATOR
+            )
+        );
+        require(res == true);
 
         //label was unused
         require(labelExist[labelHash] == false, "vault:label exist");
@@ -109,6 +151,7 @@ contract PrivateVault is IPrivateVaultHub {
 
         minted = true;
     }
+*/
 
     function saveWithoutMinting(
         string memory data,
@@ -131,13 +174,29 @@ contract PrivateVault is IPrivateVaultHub {
         uint256 deadline,
         uint8 v,
         bytes32 r,
-        bytes32 s
+        bytes32 s,
+        bytes memory params
     ) external {
-        require(IValidator(validator).isValid(tx.origin) == true, "vault: validator unpass");
+        require(IValidator(validator).isValid(params) == true, "vault: validator unpass");
+        if (privateValidator != address(0)) {
+            require(IValidator(privateValidator).isValid(params) == true);
+        }
         (bool res, ) = permissionLib.staticcall(
-            abi.encodeWithSelector(CalleeName.SAVE_WITHOUT_MINTING_PERMIT, signer,
-            data, cryptoLabel, labelHash, deadline, v, r, s, DOMAIN_SEPARATOR));
-        require(res == true, "vault:without ERROR");
+            abi.encodeWithSelector(
+                CalleeName.SAVE_WITHOUT_MINTING_PERMIT,
+                signer,
+                data,
+                cryptoLabel,
+                params,
+                labelHash,
+                deadline,
+                v,
+                r,
+                s,
+                DOMAIN_SEPARATOR
+            )
+        );
+        require(res == true);
 
         //label was unused
         require(labelExist[labelHash] == false, "vault:label exist");
@@ -163,9 +222,18 @@ contract PrivateVault is IPrivateVaultHub {
         require(total > index, "vault:keys overflow");
 
         (bool res, ) = permissionLib.staticcall(
-            abi.encodeWithSelector(CalleeName.GET_PRIVATE_DATA_BY_INDEX_PERMIT, signer,
-            index, deadline, v, r, s, DOMAIN_SEPARATOR));
-        require(res == true, "vault:index ERROR");
+            abi.encodeWithSelector(
+                CalleeName.GET_PRIVATE_DATA_BY_INDEX_PERMIT,
+                signer,
+                index,
+                deadline,
+                v,
+                r,
+                s,
+                DOMAIN_SEPARATOR
+            )
+        );
+        require(res == true);
 
         return store[labels[index]];
     }
@@ -184,9 +252,18 @@ contract PrivateVault is IPrivateVaultHub {
         bytes32 s
     ) external view returns (string memory) {
         (bool res, ) = permissionLib.staticcall(
-            abi.encodeWithSelector(CalleeName.GET_PRIVATE_DATA_BY_NAME_PERMIT, signer,
-            name, deadline, v, r, s, DOMAIN_SEPARATOR));
-        require(res == true, "vault:name ERROR");
+            abi.encodeWithSelector(
+                CalleeName.GET_PRIVATE_DATA_BY_NAME_PERMIT,
+                signer,
+                name,
+                deadline,
+                v,
+                r,
+                s,
+                DOMAIN_SEPARATOR
+            )
+        );
+        require(res == true);
 
         require(labelExist[name] == true, "vaule:label no exist");
 
@@ -207,9 +284,9 @@ contract PrivateVault is IPrivateVaultHub {
     ) external view returns (string memory) {
         require(index < total);
         (bool res, ) = permissionLib.staticcall(
-            abi.encodeWithSelector(CalleeName.LABEL_NAME_PERMIT, signer,
-            index, deadline, v, r, s, DOMAIN_SEPARATOR));
-        require(res == true, "vault:lname ERROR");
+            abi.encodeWithSelector(CalleeName.LABEL_NAME_PERMIT, signer, index, deadline, v, r, s, DOMAIN_SEPARATOR)
+        );
+        require(res == true);
 
         return hashToLabel[labels[index]];
     }
@@ -227,9 +304,18 @@ contract PrivateVault is IPrivateVaultHub {
         bytes32 s
     ) external view returns (bool) {
         (bool res, ) = permissionLib.staticcall(
-            abi.encodeWithSelector(CalleeName.LABEL_IS_EXIST_PERMIT, signer,
-            labelHash, deadline, v, r, s, DOMAIN_SEPARATOR));
-        require(res == true, "vault:exist ERROR");
+            abi.encodeWithSelector(
+                CalleeName.LABEL_IS_EXIST_PERMIT,
+                signer,
+                labelHash,
+                deadline,
+                v,
+                r,
+                s,
+                DOMAIN_SEPARATOR
+            )
+        );
+        require(res == true);
         return labelExist[labelHash];
     }
 }

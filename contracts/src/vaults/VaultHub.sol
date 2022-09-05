@@ -7,8 +7,8 @@ import "../../interfaces/vaults/IVaultHub.sol";
 import { Constant, CalleeName } from "../../libraries/Constant.sol";
 
 contract VaultHub is IVaultHub {
-    event SaveMint(uint256 indexed mintSeedAmount, uint indexed gasPrice, uint indexed timestamp);
-    event Save(uint indexed gasPrice, uint indexed timestamp);
+    event SaveMint(uint256 indexed mintSeedAmount, uint256 indexed gasPrice, uint256 indexed timestamp);
+    event Save(uint256 indexed gasPrice, uint256 indexed timestamp);
 
     address public treasury = address(0);
     address public owner;
@@ -47,24 +47,24 @@ contract VaultHub is IVaultHub {
     }
 
     function setFee(uint256 _fee) external {
-        require(msg.sender == owner, "vHub:auth invalid");
+        require(msg.sender == owner, "vHub:auth");
         fee = _fee;
     }
 
     function transferOwnership(address newOwner) external {
-        require(msg.sender == owner, "vHub:auth invalid");
-        require(newOwner != address(0), "vHub:ZERO ADDRESS");
+        require(msg.sender == owner, "vHub:auth");
+        require(newOwner != address(0));
         owner = newOwner;
     }
 
     function setTreasuryAddress(address _treasury) external {
-        require(msg.sender == owner, "vHub:caller must be owner");
-        require(treasury == address(0), "vHub:treasury has set");
+        require(msg.sender == owner, "vHub:auth");
+        require(treasury == address(0), "vHub:done");
         treasury = _treasury;
     }
 
     modifier treasuryValid() {
-        require(treasury != address(0), "vHub:ZERO address");
+        require(treasury != address(0));
         _;
     }
 
@@ -91,7 +91,7 @@ contract VaultHub is IVaultHub {
         (bool res, ) = vaultHubPermissionLib.staticcall(
             abi.encodeWithSelector(CalleeName.HAS_REGISTER_PERMIT, addr, deadline, v, r, s, DOMAIN_SEPARATOR)
         );
-        require(res == true, "vHub:delegate ERROR");
+        require(res == true);
         (bool done, ) = _vaultHasRegister(addr);
         return done;
     }
@@ -99,7 +99,10 @@ contract VaultHub is IVaultHub {
     // Determine whether a vault-name and password are registered
     function _vaultHasRegister(address addr) internal view returns (bool, address) {
         bytes32 salt = keccak256(abi.encodePacked(addr));
-        bytes memory bytecode = abi.encodePacked(type(PrivateVault).creationCode, abi.encode(addr, this, validator, privateVaultPermissionLib));
+        bytes memory bytecode = abi.encodePacked(
+            type(PrivateVault).creationCode,
+            abi.encode(addr, this, validator, privateVaultPermissionLib)
+        );
 
         //Calculate the address of the private vault, record it as vaultAddr
         address vault = calculateVaultAddress(salt, bytecode);
@@ -121,13 +124,16 @@ contract VaultHub is IVaultHub {
         (bool res, ) = vaultHubPermissionLib.staticcall(
             abi.encodeWithSelector(CalleeName.INIT_PERMIT, addr, deadline, v, r, s, DOMAIN_SEPARATOR)
         );
-        require(res == true, "vHub:delegate ERROR");
+        require(res == true);
 
         bytes32 salt = keccak256(abi.encodePacked(addr));
-        bytes memory bytecode = abi.encodePacked(type(PrivateVault).creationCode, abi.encode(addr, this, validator, privateVaultPermissionLib));
+        bytes memory bytecode = abi.encodePacked(
+            type(PrivateVault).creationCode,
+            abi.encode(addr, this, validator, privateVaultPermissionLib)
+        );
 
         (bool done, ) = _vaultHasRegister(addr);
-        require(done == false, "vHub:vault existed");
+        require(done == false, "vHub:existed");
         //create2: deploy contract
         address vault;
         assembly {
@@ -135,7 +141,7 @@ contract VaultHub is IVaultHub {
         }
 
         if (vault == address(0)) {
-            revert("vHub:create2 private vault ERROR");
+            revert("vHub:create2 ERROR");
         }
 
         return true;
@@ -152,7 +158,7 @@ contract VaultHub is IVaultHub {
         bytes32 r,
         bytes32 s
     ) external payable treasuryValid {
-        require(msg.value >= fee, "vHub:more than 0.00015");
+        require(msg.value >= fee, "vHub:fee");
         (bool res, ) = vaultHubPermissionLib.staticcall(
             abi.encodeWithSelector(
                 CalleeName.MINT_SAVE_PERMIT,
@@ -168,11 +174,11 @@ contract VaultHub is IVaultHub {
                 DOMAIN_SEPARATOR
             )
         );
-        require(res == true, "vHub:delegate ERROR");
+        require(res == true);
 
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "vHub:deploy firstly");
-        require(PrivateVault(vault).minted() == false, "vHub:mint token has done");
+        require(done == true, "vHub:undeploy");
+        require(PrivateVault(vault).minted() == false, "vHub:has mint");
 
         uint256 amount = ITreasury(treasury).mint(receiver);
 
@@ -190,7 +196,7 @@ contract VaultHub is IVaultHub {
         bytes32 r,
         bytes32 s
     ) external payable {
-        require(msg.value >= fee, "vHub:more than 0.00015");
+        require(msg.value >= fee, "vHub:fee");
         (bool res, ) = vaultHubPermissionLib.staticcall(
             abi.encodeWithSelector(
                 CalleeName.SAVE_WITHOUT_MINT_PERMIT,
@@ -205,10 +211,10 @@ contract VaultHub is IVaultHub {
                 DOMAIN_SEPARATOR
             )
         );
-        require(res == true, "vHub:delegate ERROR");
+        require(res == true);
 
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "vHub:deploy firstly");
+        require(done == true, "vHub:undeploy");
 
         PrivateVault(vault).saveWithoutMinting(data, cryptoLabel, labelHash);
         emit Save(tx.gasprice, block.timestamp);
@@ -223,12 +229,12 @@ contract VaultHub is IVaultHub {
         bytes32 s
     ) external view returns (string memory) {
         (bool res, ) = vaultHubPermissionLib.staticcall(
-            abi.encodeWithSelector(CalleeName.QUERY_BY_INDEX_PERMIT,addr, index, deadline, v, r, s, DOMAIN_SEPARATOR)
+            abi.encodeWithSelector(CalleeName.QUERY_BY_INDEX_PERMIT, addr, index, deadline, v, r, s, DOMAIN_SEPARATOR)
         );
-        require(res == true, "vHub:delegate ERROR");
+        require(res == true);
 
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "vHub:deploy firstly");
+        require(done == true, "vHub:undeploy");
 
         return PrivateVault(vault).getPrivateDataByIndex(index);
     }
@@ -253,10 +259,10 @@ contract VaultHub is IVaultHub {
                 DOMAIN_SEPARATOR
             )
         );
-        require(res == true, "vHub:delegate ERROR");
+        require(res == true);
 
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "vHub:deploy firstly");
+        require(done == true, "vHub:undeploy");
 
         return PrivateVault(vault).getPrivateDataByName(labelHash);
     }
@@ -279,10 +285,10 @@ contract VaultHub is IVaultHub {
                 DOMAIN_SEPARATOR
             )
         );
-        require(res == true, "vHub:delegate ERROR");
+        require(res == true);
 
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "vHub:deploy firstly");
+        require(done == true, "vHub:undeploy");
         return vault;
     }
 
@@ -296,9 +302,9 @@ contract VaultHub is IVaultHub {
         (bool res, ) = vaultHubPermissionLib.staticcall(
             abi.encodeWithSelector(CalleeName.HAS_MINTED_PERMIT, addr, deadline, v, r, s, DOMAIN_SEPARATOR)
         );
-        require(res == true, "vHub:delegate ERROR");
+        require(res == true);
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "vHub:deploy vault firstly");
+        require(done == true, "vHub:undeploy");
         return PrivateVault(vault).minted();
     }
 
@@ -312,10 +318,10 @@ contract VaultHub is IVaultHub {
         (bool res, ) = vaultHubPermissionLib.staticcall(
             abi.encodeWithSelector(CalleeName.TOTAL_SAVED_ITEMS_PERMIT, addr, deadline, v, r, s, DOMAIN_SEPARATOR)
         );
-        require(res == true, "vHub:delegate ERROR");
+        require(res == true);
 
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "vHub:deploy vault firstly");
+        require(done == true, "vHub:undeploy");
         return PrivateVault(vault).total();
     }
 
@@ -330,9 +336,9 @@ contract VaultHub is IVaultHub {
         (bool res, ) = vaultHubPermissionLib.staticcall(
             abi.encodeWithSelector(CalleeName.GET_LABEL_NAME_PERMIT, addr, deadline, index, v, r, s, DOMAIN_SEPARATOR)
         );
-        require(res == true, "vHub:delegate ERROR");
+        require(res == true);
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "vHub:deploy vault firstly");
+        require(done == true, "vHub:undeploy");
         return PrivateVault(vault).labelName(index);
     }
 
@@ -356,14 +362,14 @@ contract VaultHub is IVaultHub {
                 DOMAIN_SEPARATOR
             )
         );
-        require(res == true, "vHub:delegate ERROR");
+        require(res == true);
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "vHub:deploy vault firstly");
+        require(done == true, "vHub:undeploy");
         return PrivateVault(vault).labelIsExist(labelHash);
     }
 
     function withdrawETH(address payable receiver, uint256 amount) external returns (bool) {
-        require(msg.sender == owner, "vHub:auth invalid");
+        require(msg.sender == owner, "vHub:auth");
         receiver.transfer(amount);
         return true;
     }

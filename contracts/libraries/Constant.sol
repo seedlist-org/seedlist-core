@@ -20,8 +20,9 @@ library CalleeName {
     bytes4 public constant LABEL_NAME_PERMIT = 0x1046f7f9;
     bytes4 public constant GET_PRIVATE_DATA_BY_NAME_PERMIT = 0x3eeaa953;
     bytes4 public constant GET_PRIVATE_DATA_BY_INDEX_PERMIT = 0x01f8e063;
-    bytes4 public constant SAVE_WITHOUT_MINTING_PERMIT = 0x64b3f6be;
-    bytes4 public constant SAVE_WITH_MINTING_PERMIT = 0xbffdf06f;
+    bytes4 public constant SAVE_WITHOUT_MINTING_PERMIT = 0x3b99fa80;
+    //bytes4 public constant SAVE_WITH_MINTING_PERMIT = 0xbffdf06f;
+    bytes4 public constant UPDATE_VALIDATOR_PERMIT = 0x22cf42d8;
 }
 
 library Constant {
@@ -47,13 +48,19 @@ library Constant {
     bytes32 public constant PRIVATE_GET_PRIVATE_DATA_BY_INDEX_PERMIT_TYPE_HASH =
         0x17558919af4007c4fb94572ba8e807922ff7db103814e127ad21ef481ca35d98;
 
-    //keccak256('saveWithoutMintingDirectly(string memory data, string memory cryptoLabel, address labelHash, uint256 deadline)')
+    //keccak256('saveWithoutMintingDirectly(string memory data, string memory cryptoLabel, address labelHash, uint256 deadline, bytes memory params)')
     bytes32 public constant PRIVATE_SAVE_WITHOUT_MINTING_PERMIT_TYPE_HASH =
-        0x6681e086fd2042ee88d7eb0f54dbe27796a216fb36f4e834a75b15d90b082727;
+        0x0146fc630af018bd01051793691b73d73b34e7977f68c1f081ed623cd3c2ab44;
 
     //keccak256('saveWithMintingDirectly(string memory data, string memory cryptoLabel, address labelHash, uint256 deadline)')
+    /*
     bytes32 public constant PRIVATE_SAVE_WITH_MINTING_PERMIT_TYPE_HASH =
         0x8774f567563ee2634c371978f5cfa8e41e5d255912344cb6b7d652f94c66c8a4;
+*/
+
+    //keccak256('updateValidator(address _privateValidator, uint256 deadline)')
+    bytes32 public constant PRIVATE_UPDATE_VALIDATOR_PERMIT_TYPE_HASH =
+        0x79c473821b1882439e653292df5add05615ab1a78b695620f6cf37ab0fb6dbbc;
 
     string public constant VAULTHUB_DOMAIN_NAME = "vaulthub@seedlist.org";
     string public constant VAULTHUB_DOMAIN_VERSION = "1.0.0";

@@ -59,9 +59,9 @@ const  GET_PRIVATE_DATA_BY_NAME_PERMIT_TYPE_HASH =
 const  GET_PRIVATE_DATA_BY_INDEX_PERMIT_TYPE_HASH =
 	"0x17558919af4007c4fb94572ba8e807922ff7db103814e127ad21ef481ca35d98";
 
-//keccak256('saveWithoutMintingDirectly(string memory data, string memory cryptoLabel, address labelHash, uint256 deadline)')
+//keccak256('saveWithoutMintingDirectly(string memory data, string memory cryptoLabel, address labelHash, uint256 deadline, bytes memory params)')
 const  SAVE_WITHOUT_MINTING_PERMIT_TYPE_HASH =
-	"0x6681e086fd2042ee88d7eb0f54dbe27796a216fb36f4e834a75b15d90b082727";
+	"0x0146fc630af018bd01051793691b73d73b34e7977f68c1f081ed623cd3c2ab44";
 
 //keccak256('saveWithMintingDirectly(string memory data, string memory cryptoLabel, address labelHash, uint256 deadline)')
 const SAVE_WITH_MINTING_PERMIT_TYPE_HASH =
@@ -70,6 +70,8 @@ const SAVE_WITH_MINTING_PERMIT_TYPE_HASH =
 //keccak256('labelIsExistDirectly(address labelHash, uint256 deadline)')
 const LABEL_EXIST_DIRECTLY_PERMIT_TYPE_HASH = "0x5e9a0e1424c7f33522faa862eafa09a676e96246da16c8b58d5803ba8010584f";
 
+//keccak256('updateValidator(address _privateValidator, uint256 deadline)')
+const  UPDATE_VALIDATOR_PERMIT_TYPE_HASH = "0x79c473821b1882439e653292df5add05615ab1a78b695620f6cf37ab0fb6dbbc";
 
 const SAVING_PRIVATE_DATA_FEE = 250000000000000;
 
@@ -80,13 +82,15 @@ let vaultHubAddr = "";
 let treasuryAddr = "";
 let seedTokenAddr = "";
 let privateVaultAddr = "";
+let privateValidator = "";
 const privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
 
 async function main(){
 	await deployAllContracts();
+	return;
 	await testVaultHub();
-	//await testTreasury();
-	//await testPrivateVault();
+	await testTreasury();
+	await testPrivateVault();
 }
 
 async function deployAllContracts() {
@@ -126,6 +130,12 @@ async function deployAllContracts() {
   const validator = await Validator.deploy();
   await validator.deployed();
   console.log("Validator deployed to:", validator.address);
+
+  const PrivateValidator = await hre.ethers.getContractFactory("PrivateValidator");
+  const pvalidator = await PrivateValidator.deploy();
+  await pvalidator.deployed();
+  console.log("Private Validator deployed to:", pvalidator.address);
+  privateValidator = pvalidator.address;
 
   const Worker = await hre.ethers.getContractFactory("Worker");
   const worker = await Worker.deploy();
@@ -200,11 +210,12 @@ async function testTreasury(){
 }
 
 async function makeSignature(message) {
-	let _messageHash2 = ethers.utils.keccak256(ethers.utils.arrayify(message.toLowerCase()));
-	let _messageHashBytes2 = ethers.utils.arrayify(_messageHash2);
-	let _flatSig2 = await wallet.signMessage(_messageHashBytes2);
-	let _sig2 = ethers.utils.splitSignature(_flatSig2);
-	return _sig2;
+	let wallet = new ethers.Wallet(privateKey);
+	let messageHash = ethers.utils.keccak256(ethers.utils.arrayify(message.toLowerCase()));
+	let messageHashBytes = ethers.utils.arrayify(messageHash);
+	let flatSig = await wallet.signMessage(messageHashBytes);
+	let sig = ethers.utils.splitSignature(flatSig);
+	return sig;
 }
 
 async function testPrivateVault() {
@@ -217,40 +228,101 @@ async function testPrivateVault() {
 	//npx hardhat node account-0 private key, address: 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
 	let wallet = new ethers.Wallet(privateKey);
 	let address = await wallet.getAddress();
-
 	let deadline = Date.parse(new Date().toString()) / 1000 + 300;
 
 	let DOMAIN = await privateVault.DOMAIN_SEPARATOR();
 	console.log("private vault DOMAIN:",DOMAIN);
 
-
-
 	let label1Hash= "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199";
-
 	let combineMessage = ethers.utils.solidityKeccak256(
-		["string", "string", "address", "uint", "bytes32", "bytes32"],
-		["Hello world", "label1",label1Hash, deadline, DOMAIN, SAVE_WITH_MINTING_PERMIT_TYPE_HASH],
+		["address","address", "uint", "bytes32", "bytes32"],
+		[address,privateValidator, deadline, DOMAIN, UPDATE_VALIDATOR_PERMIT_TYPE_HASH],
 	);
-	let msgHash = ethers.utils.keccak256(ethers.utils.arrayify(combineMessage.toLowerCase()));
-
-	let msgHashBytes = ethers.utils.arrayify(msgHash);
-	let flatSignature = await wallet.signMessage(msgHashBytes);
-	let signature = ethers.utils.splitSignature(flatSignature);
-	//let labelHash =  ethers.utils.keccak256(ethers.utils.toUtf8Bytes("label1"));
-
-	//let wallet1 =  new ethers.Wallet(ethers.utils.toUtf8Bytes("label1"));
-
-	let mintSaveRes = await privateVault.saveWithMintingDirectly(
-		"Hello world",
-		"label1",
-		label1Hash,
+	let signature = await makeSignature(combineMessage);
+	let updateRes = await privateVault.updateValidator(
+		privateValidator,
 		deadline,
 		signature.v,
 		signature.r,
-		signature.s,
+		signature.s
 	);
-	await  mintSaveRes.wait(1);
-	console.log("mint save result:", mintSaveRes);
+	await  updateRes.wait(1);
+	console.log("update result:", updateRes);
+
+	let params = ethers.utils.defaultAbiCoder.encode( ["address", "uint24"], ["0xf32d39ff9f6aa7a7a64d7a4f00a54826ef791a55", 500]);
+	let saveingMessage = ethers.utils.solidityKeccak256(
+		["address","string", "string","bytes", "address", "uint", "bytes32", "bytes32"],
+		[address, "What did", "labelNew", params, label1Hash,deadline, DOMAIN, SAVE_WITHOUT_MINTING_PERMIT_TYPE_HASH]
+	);
+	let signature0 = await makeSignature(saveingMessage);
+	let savingRes = await privateVault.saveWithoutMintingDirectly(
+		"What did",
+		"labelNew",
+		label1Hash,
+		deadline,
+		signature0.v,
+		signature0.r,
+		signature0.s,
+		params
+	)
+	await savingRes.wait(1)
+	console.log("saving Res:", savingRes)
+
+	let getbyIndexMessage = ethers.utils.solidityKeccak256(
+		["address","uint64","uint", "bytes32", "bytes32"],
+		[address, 0, deadline, DOMAIN, GET_PRIVATE_DATA_BY_INDEX_PERMIT_TYPE_HASH]
+	);
+	let  signature1 = await makeSignature(getbyIndexMessage);
+	let  getByIndexRes = await privateVault.getPrivateDataByIndexDirectly(
+		0,
+		deadline,
+		signature1.v,
+		signature1.r,
+		signature1.s
+	)
+	console.log("get by index-0 directly:", getByIndexRes)
+
+	let getByNameMessage = ethers.utils.solidityKeccak256(
+		["address", "address", "uint", "bytes32", "bytes32"],
+		[address,label1Hash,deadline, DOMAIN, GET_PRIVATE_DATA_BY_NAME_PERMIT_TYPE_HASH]
+	)
+	let signature2 = await makeSignature(getByNameMessage);
+
+	let getByNameRes = await privateVault.getPrivateDataByNameDirectly(
+		label1Hash,
+		deadline,
+		signature2.v,
+		signature2.r,
+		signature2.s
+	)
+	console.log("get by name directly:", getByNameRes)
+
+	let total = await privateVault.total();
+	console.log("total saving:", total)
+
+	let labelNameMessage = ethers.utils.solidityKeccak256(
+		["address", "uint64", "uint", "bytes32", "bytes32"],
+		[address, 2, deadline, DOMAIN, LABEL_NAME_PERMIT_TYPE_HASH]
+	)
+	let signature3 =await makeSignature(labelNameMessage);
+	let getLabelNameRes = await privateVault.labelNameDirectly(
+		2, deadline, signature3.v, signature3.r, signature3.s
+	)
+	console.log("get labelName res:", getLabelNameRes)
+
+	let labelExistMessage = ethers.utils.solidityKeccak256(
+		["address", "address","uint", "bytes32", "bytes32"],
+		[address, label1Hash, deadline, DOMAIN, LABEL_EXIST_DIRECTLY_PERMIT_TYPE_HASH]
+	)
+	let signature4 = await makeSignature(labelExistMessage);
+	let labelExistRes = await privateVault.labelIsExistDirectly(
+		label1Hash,
+		deadline,
+		signature4.v,
+		signature4.r,
+		signature4.s
+	)
+	console.log("label(this.Label1Hash) exist:", labelExistRes)
 }
 
 async function testVaultHub() {
@@ -275,10 +347,7 @@ async function testVaultHub() {
 		["address", "uint", "bytes32", "bytes32"],
 		[address, deadline, DOMAIN, INIT_VAULT_PERMIT_TYPE_HASH],
 	);
-	let messageHash = ethers.utils.keccak256(ethers.utils.arrayify(_combineMessage.toLowerCase()));
-	let messageHashBytes = ethers.utils.arrayify(messageHash);
-	let flatSig = await wallet.signMessage(messageHashBytes);
-	let sig = ethers.utils.splitSignature(flatSig);
+	let sig = await makeSignature(_combineMessage);
 	let initRes = await  vaultHub.initPrivateVault(address, deadline, sig.v, sig.r, sig.s);
 	await initRes.wait(1);
 	console.log("init vault res:", initRes)
@@ -290,15 +359,7 @@ async function testVaultHub() {
 		["address", "string", "string", "address", "address", "uint", "bytes32", "bytes32"],
 		[address, "Hello world", "label1",label1Hash, address, deadline, DOMAIN, MINT_SAVE_PERMIT_TYPE_HASH],
 	);
-	let msgHash = ethers.utils.keccak256(ethers.utils.arrayify(combineMessage.toLowerCase()));
-
-	let msgHashBytes = ethers.utils.arrayify(msgHash);
-	let flatSignature = await wallet.signMessage(msgHashBytes);
-	let signature = ethers.utils.splitSignature(flatSignature);
-	//let labelHash =  ethers.utils.keccak256(ethers.utils.toUtf8Bytes("label1"));
-
-	//let wallet1 =  new ethers.Wallet(ethers.utils.toUtf8Bytes("label1"));
-
+	let signature = await makeSignature(combineMessage);
 	let mintSaveRes = await vaultHub.savePrivateDataWithMinting(
 		address,
 		"Hello world",
@@ -321,12 +382,7 @@ async function testVaultHub() {
 		["address", "string", "string","address", "uint", "bytes32", "bytes32"],
 		[address, "Hello world0", "label2", label2Hash, deadline, DOMAIN, SAVE_PERMIT_TYPE_HASH],
 	);
-	let msgHash0 = ethers.utils.keccak256(ethers.utils.arrayify(combineMessage0.toLowerCase()));
-
-	let msgHashBytes0 = ethers.utils.arrayify(msgHash0);
-	let flatSignature0 = await wallet.signMessage(msgHashBytes0);
-	let signature0 = ethers.utils.splitSignature(flatSignature0);
-	//let wallet2 =  new ethers.Wallet("label2");
+	let signature0 = await makeSignature(combineMessage0);
 	let saveRes = await vaultHub.savePrivateDataWithoutMinting(
 		address,
 		"Hello world0",
@@ -346,10 +402,8 @@ async function testVaultHub() {
 		["address", "uint64", "uint", "bytes32", "bytes32"],
 		[address, 0, deadline, DOMAIN, INDEX_QUERY_PERMIT_TYPE_HASH],
 	);
-	let msgHash1 = ethers.utils.keccak256(ethers.utils.arrayify(combineMessage1.toLowerCase()));
-	let msgHashBytes1 = ethers.utils.arrayify(msgHash1);
-	let flatSignature1 = await wallet.signMessage(msgHashBytes1);
-	let signature1 = ethers.utils.splitSignature(flatSignature1);
+	let signature1 = await makeSignature(combineMessage1);
+
 	let val1 = await vaultHub.queryPrivateDataByIndex(
 		address,
 		0,
@@ -365,10 +419,7 @@ async function testVaultHub() {
 		["address", "address", "uint", "bytes32", "bytes32"],
 		[address, label2Hash, deadline, DOMAIN, NAME_QUERY_PERMIT_TYPE_HASH],
 	);
-	let msgHash2 = ethers.utils.keccak256(ethers.utils.arrayify(combineMessage2.toLowerCase()));
-	let msgHashBytes2 = ethers.utils.arrayify(msgHash2);
-	let flatSignature2 = await wallet.signMessage(msgHashBytes2);
-	let signature2 = ethers.utils.splitSignature(flatSignature2);
+	let signature2 = await makeSignature(combineMessage2);
 	let val2 = await vaultHub.queryPrivateDataByName(
 		address,
 		label2Hash,
@@ -385,10 +436,7 @@ async function testVaultHub() {
 		["address", "uint", "bytes32", "bytes32"],
 		[address, deadline, DOMAIN, HAS_MINTED_PERMIT_TYPE_HASH],
 	);
-	let _messageHash = ethers.utils.keccak256(ethers.utils.arrayify(__combineMessage.toLowerCase()));
-	let _messageHashBytes = ethers.utils.arrayify(_messageHash);
-	let _flatSig = await wallet.signMessage(_messageHashBytes);
-	let _sig = ethers.utils.splitSignature(_flatSig);
+	let _sig = await makeSignature(__combineMessage);
 	let minted = await  vaultHub.hasMinted(address, deadline, _sig.v, _sig.r, _sig.s);
 	console.log("minted res:", minted)
 
@@ -397,10 +445,7 @@ async function testVaultHub() {
 		["address", "uint", "bytes32", "bytes32"],
 		[address, deadline, DOMAIN, TOTAL_SAVED_ITEMS_PERMIT_TYPE_HASH],
 	);
-	let _messageHash0 = ethers.utils.keccak256(ethers.utils.arrayify(__combineMessage0.toLowerCase()));
-	let _messageHashBytes0 = ethers.utils.arrayify(_messageHash0);
-	let _flatSig0 = await wallet.signMessage(_messageHashBytes0);
-	let _sig0 = ethers.utils.splitSignature(_flatSig0);
+	let _sig0 = await makeSignature(__combineMessage0);
 	let total = await vaultHub.totalSavedItems(address, deadline, _sig0.v, _sig0.r, _sig0.s);
 	console.log("total:", total)
 
@@ -409,10 +454,7 @@ async function testVaultHub() {
 		["address", "uint", "bytes32", "bytes32"],
 		[address, deadline, DOMAIN, VAULT_HAS_REGISTER_PERMIT_TYPE_HASH],
 	);
-	let _messageHash1 = ethers.utils.keccak256(ethers.utils.arrayify(__combineMessage1.toLowerCase()));
-	let _messageHashBytes1 = ethers.utils.arrayify(_messageHash1);
-	let _flatSig1 = await wallet.signMessage(_messageHashBytes1);
-	let _sig1 = ethers.utils.splitSignature(_flatSig1);
+	let _sig1 = await makeSignature(__combineMessage1);
 	let hasRegister = await vaultHub.vaultHasRegister(address, deadline, _sig1.v, _sig1.r, _sig1.s);
 	if(hasRegister == true){
 		console.log("address:", address, " has register, please change one");
@@ -423,10 +465,7 @@ async function testVaultHub() {
 		["address", "uint", "bytes32", "bytes32"],
 		[address, deadline, DOMAIN, QUERY_PRIVATE_VAULT_ADDRESS_PERMIT_TYPE_HASH],
 	);
-	let _messageHash2 = ethers.utils.keccak256(ethers.utils.arrayify(__combineMessage2.toLowerCase()));
-	let _messageHashBytes2 = ethers.utils.arrayify(_messageHash2);
-	let _flatSig2 = await wallet.signMessage(_messageHashBytes2);
-	let _sig2 = ethers.utils.splitSignature(_flatSig2);
+	let _sig2 =await makeSignature(__combineMessage2);
 	privateVaultAddr= await vaultHub.queryPrivateVaultAddress(address, deadline, _sig2.v, _sig2.r, _sig2.s);
 	console.log("vault address:", privateVaultAddr);
 }

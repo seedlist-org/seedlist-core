@@ -18,7 +18,7 @@ contract Treasury is ITreasury {
     address public seedToken;
 
     uint256 public lastWithdrawAmount = 0;
-    uint64  public withdrawCnt = 0;
+    uint64 public withdrawCnt = 0;
     //if true, means starting the halving withdrawal mode
     bool public enableHalf = false;
 
@@ -73,12 +73,12 @@ contract Treasury is ITreasury {
         ISeed(seedToken).mint(address(this), GENESIS_MINTABLE_AMOUNT_FOR_TREASURE >> cycle);
 
         ISeed(seedToken).mint(receiver, GENESIS_MINTABLE_AMOUNT_FOR_USER >> cycle);
-        return GENESIS_MINTABLE_AMOUNT_FOR_USER>>cycle;
+        return GENESIS_MINTABLE_AMOUNT_FOR_USER >> cycle;
     }
 
     receive() external payable {}
 
-    function setHalf(bool enable) external onlyOwner returns(bool){
+    function setHalf(bool enable) external onlyOwner returns (bool) {
         enableHalf = enable;
         return true;
     }
@@ -92,19 +92,19 @@ contract Treasury is ITreasury {
         //The amount of each withdrawal does not exceed the normal amount of the previous amount,
         //When the number of withdrawals is not zero and the withdrawal amount is zero,
         //it means abandoning the withdrawal of SEED token
-        if(tokenAddress==seedToken && enableHalf==true){
-            if(withdrawCnt>0 && lastWithdrawAmount==0){
+        if (tokenAddress == seedToken && enableHalf == true) {
+            if (withdrawCnt > 0 && lastWithdrawAmount == 0) {
                 return false;
             }
-            if(withdrawCnt>0 && amount>lastWithdrawAmount>>1){
-                amount = lastWithdrawAmount>>1;
+            if (withdrawCnt > 0 && amount > lastWithdrawAmount >> 1) {
+                amount = lastWithdrawAmount >> 1;
             }
 
             lastWithdrawAmount = amount;
-            withdrawCnt = withdrawCnt+1;
+            withdrawCnt = withdrawCnt + 1;
         }
 
-        require(IERC20(tokenAddress).balanceOf(address(this))>=amount, "Treasury: amount invalid");
+        require(IERC20(tokenAddress).balanceOf(address(this)) >= amount, "Treasury: amount invalid");
         IERC20(tokenAddress).transfer(receiver, amount);
         return true;
     }

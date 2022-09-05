@@ -3,6 +3,7 @@
 pragma solidity >=0.8.12;
 
 interface IPrivateVaultHub {
+    /*
     function saveWithMintingDirectly(
         string memory data,
         string memory cryptoLabel,
@@ -10,8 +11,10 @@ interface IPrivateVaultHub {
         uint256 deadline,
         uint8 v,
         bytes32 r,
-        bytes32 s
+        bytes32 s,
+        bytes memory params
     ) external;
+*/
 
     function saveWithoutMintingDirectly(
         string memory data,
@@ -20,7 +23,8 @@ interface IPrivateVaultHub {
         uint256 deadline,
         uint8 v,
         bytes32 r,
-        bytes32 s
+        bytes32 s,
+        bytes memory params
     ) external;
 
     function getPrivateDataByIndexDirectly(

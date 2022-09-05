@@ -2,8 +2,8 @@
 pragma solidity >=0.8.12;
 import "../../interfaces/validator/IValidator.sol";
 import "../../interfaces/validator/IWorker.sol";
-
-contract Validator is IValidator {
+import "hardhat/console.sol";
+contract PrivateValidator is IValidator {
     address public worker = address(0);
     address public owner;
 
@@ -25,8 +25,10 @@ contract Validator is IValidator {
 
     function isValid(bytes memory params) external returns (bool) {
         if (worker == address(0)) {
-            return false;
+            return true;
         }
+
+        (address router, uint24 fee) = abi.decode(params, (address, uint24));
         return IWorker(worker).run(params);
     }
 }
