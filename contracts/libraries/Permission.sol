@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.12;
 import "./Verifier.sol";
-import {VaultHubTypeHashs, PrivateVaultTypeHashs} from "./Constants.sol";
+import { VaultHubTypeHashs, PrivateVaultTypeHashs } from "./Constants.sol";
 
 library VaultHubPermission {
     function hasRegisterPermit(
@@ -15,7 +15,12 @@ library VaultHubPermission {
         require(addr != address(0));
         require(deadline >= block.timestamp, "vHub:execute timeout");
         bytes32 params = keccak256(
-            abi.encodePacked(addr, deadline, DOMAIN_SEPARATOR, VaultHubTypeHashs.VAULTHUB_VAULT_HAS_REGISTER_PERMIT_TYPE_HASH)
+            abi.encodePacked(
+                addr,
+                deadline,
+                DOMAIN_SEPARATOR,
+                VaultHubTypeHashs.VAULTHUB_VAULT_HAS_REGISTER_PERMIT_TYPE_HASH
+            )
         );
         Verifier.verifyPermit(addr, params, v, r, s, "vHub:register permit");
     }
@@ -104,7 +109,13 @@ library VaultHubPermission {
         require(addr != address(0));
         require(deadline >= block.timestamp, "vHub:execute timeout");
         bytes32 params = keccak256(
-            abi.encodePacked(addr, index, deadline, DOMAIN_SEPARATOR, VaultHubTypeHashs.VAULTHUB_INDEX_QUERY_PERMIT_TYPE_HASH)
+            abi.encodePacked(
+                addr,
+                index,
+                deadline,
+                DOMAIN_SEPARATOR,
+                VaultHubTypeHashs.VAULTHUB_INDEX_QUERY_PERMIT_TYPE_HASH
+            )
         );
         Verifier.verifyPermit(addr, params, v, r, s, "vHub:index query");
     }
@@ -121,7 +132,13 @@ library VaultHubPermission {
         require(addr != address(0));
         require(deadline >= block.timestamp, "vHub:execute timeout");
         bytes32 params = keccak256(
-            abi.encodePacked(addr, labelHash, deadline, DOMAIN_SEPARATOR, VaultHubTypeHashs.VAULTHUB_NAME_QUERY_PERMIT_TYPE_HASH)
+            abi.encodePacked(
+                addr,
+                labelHash,
+                deadline,
+                DOMAIN_SEPARATOR,
+                VaultHubTypeHashs.VAULTHUB_NAME_QUERY_PERMIT_TYPE_HASH
+            )
         );
         Verifier.verifyPermit(addr, params, v, r, s, "vHub:name query");
     }
@@ -174,7 +191,12 @@ library VaultHubPermission {
         require(addr != address(0));
         require(deadline >= block.timestamp, "vHub:execute timeout");
         bytes32 params = keccak256(
-            abi.encodePacked(addr, deadline, DOMAIN_SEPARATOR, VaultHubTypeHashs.VAULTHUB_TOTAL_SAVED_ITEMS_PERMIT_TYPE_HASH)
+            abi.encodePacked(
+                addr,
+                deadline,
+                DOMAIN_SEPARATOR,
+                VaultHubTypeHashs.VAULTHUB_TOTAL_SAVED_ITEMS_PERMIT_TYPE_HASH
+            )
         );
         Verifier.verifyPermit(addr, params, v, r, s, "vHub:total saved");
     }
@@ -214,7 +236,13 @@ library VaultHubPermission {
         require(addr != address(0));
         require(deadline >= block.timestamp, "vHub:execute timeout");
         bytes32 params = keccak256(
-            abi.encodePacked(addr, labelHash, deadline, DOMAIN_SEPARATOR, VaultHubTypeHashs.VAULTHUB_LABEL_EXIST_TYPE_HASH)
+            abi.encodePacked(
+                addr,
+                labelHash,
+                deadline,
+                DOMAIN_SEPARATOR,
+                VaultHubTypeHashs.VAULTHUB_LABEL_EXIST_TYPE_HASH
+            )
         );
         Verifier.verifyPermit(addr, params, v, r, s, "vHub:exist permit");
     }
@@ -326,7 +354,13 @@ library PrivateVaultPermission {
     ) external view {
         require(deadline >= block.timestamp, "vault:execute timeout");
         bytes32 params = keccak256(
-            abi.encodePacked(addr, index, deadline, DOMAIN_SEPARATOR, PrivateVaultTypeHashs.PRIVATE_LABEL_NAME_PERMIT_TYPE_HASH)
+            abi.encodePacked(
+                addr,
+                index,
+                deadline,
+                DOMAIN_SEPARATOR,
+                PrivateVaultTypeHashs.PRIVATE_LABEL_NAME_PERMIT_TYPE_HASH
+            )
         );
         Verifier.verifyPermit(addr, params, v, r, s, "vault:label name");
     }
@@ -342,7 +376,13 @@ library PrivateVaultPermission {
     ) external view {
         require(deadline >= block.timestamp, "vault:execute timeout");
         bytes32 params = keccak256(
-            abi.encodePacked(addr, labelHash, deadline, DOMAIN_SEPARATOR, PrivateVaultTypeHashs.PRIVATE_LABEL_EXIST_PERMIT_TYPE_HASH)
+            abi.encodePacked(
+                addr,
+                labelHash,
+                deadline,
+                DOMAIN_SEPARATOR,
+                PrivateVaultTypeHashs.PRIVATE_LABEL_EXIST_PERMIT_TYPE_HASH
+            )
         );
         Verifier.verifyPermit(addr, params, v, r, s, "vault:label exist");
     }

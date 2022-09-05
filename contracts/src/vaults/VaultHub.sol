@@ -229,7 +229,16 @@ contract VaultHub is IVaultHub {
         bytes32 s
     ) external view returns (string memory) {
         (bool res, ) = vaultHubPermissionLib.staticcall(
-            abi.encodeWithSelector(VaultHubCallee.QUERY_BY_INDEX_PERMIT, addr, index, deadline, v, r, s, DOMAIN_SEPARATOR)
+            abi.encodeWithSelector(
+                VaultHubCallee.QUERY_BY_INDEX_PERMIT,
+                addr,
+                index,
+                deadline,
+                v,
+                r,
+                s,
+                DOMAIN_SEPARATOR
+            )
         );
         require(res == true);
 
@@ -334,7 +343,16 @@ contract VaultHub is IVaultHub {
         bytes32 s
     ) external view returns (string memory) {
         (bool res, ) = vaultHubPermissionLib.staticcall(
-            abi.encodeWithSelector(VaultHubCallee.GET_LABEL_NAME_PERMIT, addr, deadline, index, v, r, s, DOMAIN_SEPARATOR)
+            abi.encodeWithSelector(
+                VaultHubCallee.GET_LABEL_NAME_PERMIT,
+                addr,
+                deadline,
+                index,
+                v,
+                r,
+                s,
+                DOMAIN_SEPARATOR
+            )
         );
         require(res == true);
         (bool done, address vault) = _vaultHasRegister(addr);

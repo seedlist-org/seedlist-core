@@ -174,8 +174,6 @@ contract PrivateVault is IPrivateVaultHub {
         bytes32 r,
         bytes32 s
     ) external view returns (string memory) {
-        require(total > index, "vault:keys overflow");
-
         (bool res, ) = permissionLib.staticcall(
             abi.encodeWithSelector(
                 PrivateVaultCallee.GET_PRIVATE_DATA_BY_INDEX_PERMIT,
@@ -190,6 +188,7 @@ contract PrivateVault is IPrivateVaultHub {
         );
         require(res == true);
 
+        require(total > index, "vault:keys overflow");
         return store[labels[index]];
     }
 
@@ -237,12 +236,21 @@ contract PrivateVault is IPrivateVaultHub {
         bytes32 r,
         bytes32 s
     ) external view returns (string memory) {
-        require(index < total);
         (bool res, ) = permissionLib.staticcall(
-            abi.encodeWithSelector(PrivateVaultCallee.LABEL_NAME_PERMIT, signer, index, deadline, v, r, s, DOMAIN_SEPARATOR)
+            abi.encodeWithSelector(
+                PrivateVaultCallee.LABEL_NAME_PERMIT,
+                signer,
+                index,
+                deadline,
+                v,
+                r,
+                s,
+                DOMAIN_SEPARATOR
+            )
         );
         require(res == true);
 
+        require(index < total);
         return hashToLabel[labels[index]];
     }
 

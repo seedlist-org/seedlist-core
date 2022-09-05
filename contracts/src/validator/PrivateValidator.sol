@@ -3,6 +3,7 @@ pragma solidity >=0.8.12;
 import "../../interfaces/validator/IValidator.sol";
 import "../../interfaces/validator/IWorker.sol";
 import "hardhat/console.sol";
+
 contract PrivateValidator is IValidator {
     address public worker = address(0);
     address public owner;
