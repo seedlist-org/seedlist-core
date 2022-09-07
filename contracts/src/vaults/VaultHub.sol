@@ -24,8 +24,6 @@ contract VaultHub is IVaultHub {
         address _vaultHubPermissionLib,
         address _privateVaultPermissionLib
     ) {
-        require(_validator != address(0));
-
         uint256 chainId;
         assembly {
             chainId := chainid()
@@ -61,11 +59,6 @@ contract VaultHub is IVaultHub {
         require(msg.sender == owner, "vHub:auth");
         require(treasury == address(0), "vHub:done");
         treasury = _treasury;
-    }
-
-    modifier treasuryValid() {
-        require(treasury != address(0));
-        _;
     }
 
     function calculateVaultAddress(bytes32 salt, bytes memory bytecode) internal view returns (address) {
@@ -157,7 +150,8 @@ contract VaultHub is IVaultHub {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external payable treasuryValid {
+    ) external payable {
+        require(treasury != address(0));
         require(msg.value >= fee, "vHub:fee");
         (bool res, ) = vaultHubPermissionLib.staticcall(
             abi.encodeWithSelector(

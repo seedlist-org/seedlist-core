@@ -201,6 +201,13 @@ async function testTreasury(){
 	let res4 = await seed4Resp.wait(1);
 	console.log("withdraw 25 SEED finish, ",res4);
 
+	let rulesResp = await treasury.addRule("Hello Rule");
+	let res5 = await rulesResp.wait(1);
+	console.log("add Rule finished");
+	let num = await treasury.ruleSize();
+	console.log("num:",num);
+	let rule = await treasury.rules(num-1);
+	console.log("rule:",rule);
 /*
 	let ethResp = await treasury.withdrawETH("0xB1799E2ccB10E4a8386E17474363A2BE8e33cDfb", ethers.BigNumber.from("1000000000000000000"));
 	ethResp.wait(1);

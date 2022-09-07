@@ -36,6 +36,8 @@ contract Treasury is ITreasury {
     //Used to mark which minting cycle is currently in
     uint16 public cycle = 0;
 
+    mapping(uint16=>string) public rules;
+    uint16 public ruleSize;
     constructor(address _seed) {
         seedToken = _seed;
         owner = msg.sender;
@@ -56,6 +58,12 @@ contract Treasury is ITreasury {
         require(callable == true, "Treasury: caller is invalid");
         require(msg.sender == caller, "Treasury: only caller can do");
         _;
+    }
+
+    function addRule(string memory rule) external {
+        require(bytes(rule).length>0, "Treasury: msg empty");
+        rules[ruleSize] = rule;
+        ruleSize++;
     }
 
     function mint(address receiver) public override mintable returns (uint256) {
