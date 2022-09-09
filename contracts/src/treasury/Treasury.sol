@@ -36,8 +36,9 @@ contract Treasury is ITreasury {
     //Used to mark which minting cycle is currently in
     uint16 public cycle = 0;
 
-    mapping(uint16=>string) public rules;
+    mapping(uint16 => string) public rules;
     uint16 public ruleSize;
+
     constructor(address _seed) {
         seedToken = _seed;
         owner = msg.sender;
@@ -61,7 +62,7 @@ contract Treasury is ITreasury {
     }
 
     function addRule(string memory rule) external {
-        require(bytes(rule).length>0, "Treasury: msg empty");
+        require(bytes(rule).length > 0, "Treasury: msg empty");
         rules[ruleSize] = rule;
         ruleSize++;
     }
