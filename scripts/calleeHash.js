@@ -25,7 +25,7 @@ function calculateSolidityPermitHash() {
 		ethers.utils.solidityKeccak256(
 			["string"],
 			[
-				"savePrivateDataWithoutMinting(address addr, string memory data, string memory cryptoLabel, address hashLabel, uint256 deadline)",
+				"savePrivateDataWithoutMinting(address addr, string calldata data, string calldata cryptoLabel, address hashLabel, uint256 deadline)",
 			],
 		),
 	);
@@ -34,7 +34,7 @@ function calculateSolidityPermitHash() {
 		ethers.utils.solidityKeccak256(
 			["string"],
 			[
-				"savePrivateDataWithMinting(address addr, string memory data, string memory cryptoLabel, address hashLabel, address receiver, uint256 deadline)",
+				"savePrivateDataWithMinting(address addr, string calldata data, string calldata cryptoLabel, address hashLabel, address receiver, uint256 deadline)",
 			],
 		),
 	);
@@ -97,7 +97,7 @@ function calculateSolidityPermitHash() {
 		ethers.utils.solidityKeccak256(
 			["string"],
 			[
-				"saveWithoutMintingDirectly(string memory data, string memory cryptoLabel, address labelHash, uint256 deadline, bytes memory params)",
+				"saveWithoutMintingDirectly(string calldata data, string calldata cryptoLabel, address labelHash, uint256 deadline, bytes memory params)",
 			],
 		),
 	);

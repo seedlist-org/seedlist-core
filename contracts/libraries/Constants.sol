@@ -8,15 +8,15 @@ library VaultHubTypeHashs {
     bytes32 public constant VAULTHUB_DOMAIN_TYPE_HASH =
         0x6c055b4eb43bcfe637041a3adda3d9f2b05d93fc3a54fc8c978e7d0d95e35b66;
 
-    // keccak256('savePrivateDataWithMinting(address addr, string memory data, string memory cryptoLabel, address labelHash,
+    // keccak256('savePrivateDataWithMinting(address addr, string calldata data, string calldata cryptoLabel, address labelHash,
     // address receiver, uint256 deadline)');
     bytes32 public constant VAULTHUB_MINT_SAVE_PERMIT_TYPE_HASH =
-        0xe4f65c557ffdb3934e9fffd9af8d365eca51b20601a53082ce10b1e0ac04461f;
+        0xcdd3cc6eb42396c94a4d5d905327888ade5ae14c59a5d22ae3235b88283c0035;
 
-    // keccak256('savePrivateDataWithoutMinting(address addr, string memory data,
-    // string memory cryptoLabel, address labelHash, uint256 deadline)');
+    // keccak256('savePrivateDataWithoutMinting(address addr, string calldata data,
+    // string calldata cryptoLabel, address labelHash, uint256 deadline)');
     bytes32 public constant VAULTHUB_SAVE_PERMIT_TYPE_HASH =
-        0x25f3fe064ef39028ecb8ad22c47a4f382a81ca1f21d802b4fdb8c3e213b9df72;
+        0x50a5dca0d9658d6eb6282f2d7bdda2a899b962259e2708f7cce8c48021a63483;
 
     //keccak256('queryPrivateDataByIndex(address addr, uint64 index, uint256 deadline)')
     bytes32 public constant VAULTHUB_INDEX_QUERY_PERMIT_TYPE_HASH =
@@ -78,9 +78,9 @@ library PrivateVaultTypeHashs {
     bytes32 public constant PRIVATE_GET_PRIVATE_DATA_BY_INDEX_PERMIT_TYPE_HASH =
         0x17558919af4007c4fb94572ba8e807922ff7db103814e127ad21ef481ca35d98;
 
-    //keccak256('saveWithoutMintingDirectly(string memory data, string memory cryptoLabel, address labelHash, uint256 deadline, bytes memory params)')
+    //keccak256('saveWithoutMintingDirectly(string calldata data, string calldata cryptoLabel, address labelHash, uint256 deadline, bytes memory params)')
     bytes32 public constant PRIVATE_SAVE_WITHOUT_MINTING_PERMIT_TYPE_HASH =
-        0x0146fc630af018bd01051793691b73d73b34e7977f68c1f081ed623cd3c2ab44;
+        0xb5874d5c3f6f8ad0eddae31287a8b0ff49e374249cd2389616fb828f06f42f63;
 
     //keccak256('updateValidator(address _privateValidator, uint256 deadline)')
     bytes32 public constant PRIVATE_UPDATE_VALIDATOR_PERMIT_TYPE_HASH =

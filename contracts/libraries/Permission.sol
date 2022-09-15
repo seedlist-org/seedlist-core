@@ -43,8 +43,8 @@ library VaultHubPermission {
 
     function mintSavePermit(
         address addr,
-        string memory data,
-        string memory cryptoLabel,
+        string calldata data,
+        string calldata cryptoLabel,
         address labelHash,
         address receiver,
         uint256 deadline,
@@ -72,8 +72,8 @@ library VaultHubPermission {
 
     function saveWithoutMintPermit(
         address addr,
-        string memory data,
-        string memory cryptoLabel,
+        string calldata data,
+        string calldata cryptoLabel,
         address labelHash,
         uint256 deadline,
         uint8 v,
@@ -273,8 +273,8 @@ library PrivateVaultPermission {
 
     function saveWithoutMintingPermit(
         address addr,
-        string memory data,
-        string memory cryptoLabel,
+        string calldata data,
+        string calldata cryptoLabel,
         bytes memory _params,
         address labelHash,
         uint256 deadline,

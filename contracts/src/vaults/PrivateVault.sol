@@ -90,8 +90,8 @@ contract PrivateVault is IPrivateVaultHub {
 
     //cryptoLabel is encrypt message from Label value
     function saveWithMinting(
-        string memory data,
-        string memory cryptoLabel,
+        string calldata data,
+        string calldata cryptoLabel,
         address labelHash
     ) external auth {
         require(minted == false, "vault:mint done");
@@ -109,8 +109,8 @@ contract PrivateVault is IPrivateVaultHub {
     }
 
     function saveWithoutMinting(
-        string memory data,
-        string memory cryptoLabel,
+        string calldata data,
+        string calldata cryptoLabel,
         address labelHash
     ) external auth {
         //label was unused
@@ -123,8 +123,8 @@ contract PrivateVault is IPrivateVaultHub {
     }
 
     function saveWithoutMintingDirectly(
-        string memory data,
-        string memory cryptoLabel,
+        string calldata data,
+        string calldata cryptoLabel,
         address labelHash,
         uint256 deadline,
         uint8 v,

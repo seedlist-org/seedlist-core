@@ -142,8 +142,8 @@ contract VaultHub is IVaultHub {
 
     function savePrivateDataWithMinting(
         address addr,
-        string memory data,
-        string memory cryptoLabel,
+        string calldata data,
+        string calldata cryptoLabel,
         address labelHash,
         address receiver,
         uint256 deadline,
@@ -182,8 +182,8 @@ contract VaultHub is IVaultHub {
 
     function savePrivateDataWithoutMinting(
         address addr,
-        string memory data,
-        string memory cryptoLabel,
+        string calldata data,
+        string calldata cryptoLabel,
         address labelHash,
         uint256 deadline,
         uint8 v,

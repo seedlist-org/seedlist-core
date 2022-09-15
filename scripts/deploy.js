@@ -11,11 +11,11 @@ const DOMAIN_SEPARATOR = "0xeff7361eb9be999d71f09b696682b429fa50c59d1d2bdca4c9a5
 // keccak256('savePrivateDataWithMinting(address addr, string memory data, string memory cryptoLabel, address labelHash,
 // address receiver, uint256 deadline)');
 const MINT_SAVE_PERMIT_TYPE_HASH =
-	"0xe4f65c557ffdb3934e9fffd9af8d365eca51b20601a53082ce10b1e0ac04461f";
+	"0xcdd3cc6eb42396c94a4d5d905327888ade5ae14c59a5d22ae3235b88283c0035";
 
 // keccak256('savePrivateDataWithoutMinting(address addr, string memory data,
 // string memory cryptoLabel, address labelHash, uint256 deadline)');
-const SAVE_PERMIT_TYPE_HASH = "0x25f3fe064ef39028ecb8ad22c47a4f382a81ca1f21d802b4fdb8c3e213b9df72";
+const SAVE_PERMIT_TYPE_HASH = "0x50a5dca0d9658d6eb6282f2d7bdda2a899b962259e2708f7cce8c48021a63483";
 
 //keccak256('queryPrivateDataByIndex(address addr, uint64 index, uint256 deadline)')
 const INDEX_QUERY_PERMIT_TYPE_HASH =
@@ -61,7 +61,7 @@ const  GET_PRIVATE_DATA_BY_INDEX_PERMIT_TYPE_HASH =
 
 //keccak256('saveWithoutMintingDirectly(string memory data, string memory cryptoLabel, address labelHash, uint256 deadline, bytes memory params)')
 const  SAVE_WITHOUT_MINTING_PERMIT_TYPE_HASH =
-	"0x0146fc630af018bd01051793691b73d73b34e7977f68c1f081ed623cd3c2ab44";
+	"0xb5874d5c3f6f8ad0eddae31287a8b0ff49e374249cd2389616fb828f06f42f63";
 
 //keccak256('saveWithMintingDirectly(string memory data, string memory cryptoLabel, address labelHash, uint256 deadline)')
 const SAVE_WITH_MINTING_PERMIT_TYPE_HASH =
@@ -88,10 +88,8 @@ const privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4
 async function main(){
 	await deployAllContracts();
 	await testVaultHub();
-/*
 	await testTreasury();
 	await testPrivateVault();
-*/
 }
 
 async function deployAllContracts() {
