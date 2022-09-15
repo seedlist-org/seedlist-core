@@ -29,7 +29,7 @@ contract PrivateValidator is IValidator {
             return true;
         }
 
-        (address router, uint24 fee) = abi.decode(params, (address, uint24));
+        //(address router, uint24 fee) = abi.decode(params, (address, uint24));
         return IWorker(worker).run(params);
     }
 }

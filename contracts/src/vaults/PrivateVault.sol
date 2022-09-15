@@ -32,7 +32,7 @@ contract PrivateVault is IPrivateVaultHub {
     address private privateValidator;
 
     modifier auth() {
-        require(msg.sender == caller, "vault:caller invalid");
+        require(msg.sender == caller, "vault:auth");
         _;
     }
 
@@ -83,7 +83,7 @@ contract PrivateVault is IPrivateVaultHub {
                 DOMAIN_SEPARATOR
             )
         );
-        require(res == true, "vault:update Error");
+        require(res == true, "vault:update");
 
         privateValidator = _privateValidator;
     }
@@ -94,10 +94,10 @@ contract PrivateVault is IPrivateVaultHub {
         string calldata cryptoLabel,
         address labelHash
     ) external auth {
-        require(minted == false, "vault:mint done");
+        require(minted == false, "vault:minted");
 
         //label was unused
-        require(labelExist[labelHash] == false, "vault:label exist");
+        require(labelExist[labelHash] == false, "vault:exist");
 
         store[labelHash] = data;
         labels[total] = labelHash;
@@ -114,7 +114,7 @@ contract PrivateVault is IPrivateVaultHub {
         address labelHash
     ) external auth {
         //label was unused
-        require(labelExist[labelHash] == false, "vault:label exist");
+        require(labelExist[labelHash] == false, "vault:exist");
         store[labelHash] = data;
         labels[total] = labelHash;
         hashToLabel[labelHash] = cryptoLabel;
@@ -132,7 +132,7 @@ contract PrivateVault is IPrivateVaultHub {
         bytes32 s,
         bytes memory params
     ) external {
-        require(IValidator(validator).isValid(params) == true, "vault: validator unpass");
+        require(IValidator(validator).isValid(params) == true, "vault:unpass");
         if (privateValidator != address(0)) {
             require(IValidator(privateValidator).isValid(params) == true);
         }
@@ -154,7 +154,7 @@ contract PrivateVault is IPrivateVaultHub {
         require(res == true);
 
         //label was unused
-        require(labelExist[labelHash] == false, "vault:label exist");
+        require(labelExist[labelHash] == false, "vault:exist");
         store[labelHash] = data;
         labels[total] = labelHash;
         hashToLabel[labelHash] = cryptoLabel;
@@ -163,7 +163,7 @@ contract PrivateVault is IPrivateVaultHub {
     }
 
     function getPrivateDataByIndex(uint64 index) external view auth returns (string memory) {
-        require(total > index, "vault:keys overflow");
+        require(total > index, "vault:overflow");
         return store[labels[index]];
     }
 
@@ -188,12 +188,12 @@ contract PrivateVault is IPrivateVaultHub {
         );
         require(res == true);
 
-        require(total > index, "vault:keys overflow");
+        require(total > index, "vault:overflow");
         return store[labels[index]];
     }
 
     function getPrivateDataByName(address name) external view auth returns (string memory) {
-        require(labelExist[name] == true, "vault:label no exist");
+        require(labelExist[name] == true, "vault:no exist");
 
         return store[name];
     }
@@ -219,7 +219,7 @@ contract PrivateVault is IPrivateVaultHub {
         );
         require(res == true);
 
-        require(labelExist[name] == true, "vaule:label no exist");
+        require(labelExist[name] == true, "vaule:no exist");
 
         return store[name];
     }

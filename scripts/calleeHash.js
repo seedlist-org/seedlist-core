@@ -103,14 +103,6 @@ function calculateSolidityPermitHash() {
 	);
 
 	console.log(
-		"private-saveWithMintingDirectly:",
-		ethers.utils.solidityKeccak256(
-			["string"],
-			["saveWithMintingDirectly(string memory data, string memory cryptoLabel, address labelHash, uint256 deadline)"],
-		),
-	);
-
-	console.log(
 		"private-labelExistDirectly:",
 		ethers.utils.solidityKeccak256(["string"], ["labelIsExistDirectly(address labelHash, uint256 deadline)"]),
 	);

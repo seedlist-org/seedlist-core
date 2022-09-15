@@ -45,19 +45,18 @@ contract VaultHub is IVaultHub {
     }
 
     function setFee(uint256 _fee) external {
-        require(msg.sender == owner, "vHub:auth");
+        require(msg.sender == owner);
         fee = _fee;
     }
 
     function transferOwnership(address newOwner) external {
-        require(msg.sender == owner, "vHub:auth");
+        require(msg.sender == owner);
         require(newOwner != address(0));
         owner = newOwner;
     }
 
     function setTreasuryAddress(address _treasury) external {
-        require(msg.sender == owner, "vHub:auth");
-        require(treasury == address(0), "vHub:done");
+        require(msg.sender == owner);
         treasury = _treasury;
     }
 
@@ -140,6 +139,10 @@ contract VaultHub is IVaultHub {
         return true;
     }
 
+    function requireVaultRegistered(bool done) internal pure {
+        require(done == true, "vHub:undeploy");
+    }
+
     function savePrivateDataWithMinting(
         address addr,
         string calldata data,
@@ -171,7 +174,7 @@ contract VaultHub is IVaultHub {
         require(res == true);
 
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "vHub:undeploy");
+        requireVaultRegistered(done);
         require(PrivateVault(vault).minted() == false, "vHub:has mint");
 
         uint256 amount = ITreasury(treasury).mint(receiver);
@@ -208,7 +211,7 @@ contract VaultHub is IVaultHub {
         require(res == true);
 
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "vHub:undeploy");
+        requireVaultRegistered(done);
 
         PrivateVault(vault).saveWithoutMinting(data, cryptoLabel, labelHash);
         emit Save(tx.gasprice, block.timestamp);
@@ -237,7 +240,7 @@ contract VaultHub is IVaultHub {
         require(res == true);
 
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "vHub:undeploy");
+        requireVaultRegistered(done);
 
         return PrivateVault(vault).getPrivateDataByIndex(index);
     }
@@ -265,7 +268,7 @@ contract VaultHub is IVaultHub {
         require(res == true);
 
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "vHub:undeploy");
+        requireVaultRegistered(done);
 
         return PrivateVault(vault).getPrivateDataByName(labelHash);
     }
@@ -291,7 +294,7 @@ contract VaultHub is IVaultHub {
         require(res == true);
 
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "vHub:undeploy");
+        requireVaultRegistered(done);
         return vault;
     }
 
@@ -307,7 +310,7 @@ contract VaultHub is IVaultHub {
         );
         require(res == true);
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "vHub:undeploy");
+        requireVaultRegistered(done);
         return PrivateVault(vault).minted();
     }
 
@@ -324,7 +327,7 @@ contract VaultHub is IVaultHub {
         require(res == true);
 
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "vHub:undeploy");
+        requireVaultRegistered(done);
         return PrivateVault(vault).total();
     }
 
@@ -350,7 +353,7 @@ contract VaultHub is IVaultHub {
         );
         require(res == true);
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "vHub:undeploy");
+        requireVaultRegistered(done);
         return PrivateVault(vault).labelName(index);
     }
 
@@ -376,12 +379,12 @@ contract VaultHub is IVaultHub {
         );
         require(res == true);
         (bool done, address vault) = _vaultHasRegister(addr);
-        require(done == true, "vHub:undeploy");
+        requireVaultRegistered(done);
         return PrivateVault(vault).labelIsExist(labelHash);
     }
 
     function withdrawETH(address payable receiver, uint256 amount) external returns (bool) {
-        require(msg.sender == owner, "vHub:auth");
+        require(msg.sender == owner);
         receiver.transfer(amount);
         return true;
     }

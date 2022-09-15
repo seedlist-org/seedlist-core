@@ -11,6 +11,7 @@ contract Worker is IWorker {
     }
 
     function run(bytes memory params) external view returns (bool) {
+        abi.decode(params, (address, uint24)); //demo about decoding params
         if (passor[tx.origin] == true) {
             return true;
         }

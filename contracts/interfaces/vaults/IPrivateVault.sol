@@ -3,22 +3,9 @@
 pragma solidity >=0.8.12;
 
 interface IPrivateVaultHub {
-    /*
-    function saveWithMintingDirectly(
-        string memory data,
-        string memory cryptoLabel,
-        address labelHash,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s,
-        bytes memory params
-    ) external;
-*/
-
     function saveWithoutMintingDirectly(
-        string memory data,
-        string memory cryptoLabel,
+        string calldata data,
+        string calldata cryptoLabel,
         address labelHash,
         uint256 deadline,
         uint8 v,
