@@ -57,6 +57,10 @@ module.exports = {
 		  gas: 21000000,
 		  gasPrice: 8000000000
 	  },
+	  yuanma: {
+		  url: "http://localhost:8501",
+		  accounts: [`${privkey}`]
+	  },
 	  arbitrum:{
         url: "https://rinkeby.arbitrum.io/rpc",
         accounts: [`${privkey}`]

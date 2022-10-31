@@ -73,7 +73,7 @@ const LABEL_EXIST_DIRECTLY_PERMIT_TYPE_HASH = "0x5e9a0e1424c7f33522faa862eafa09a
 //keccak256('updateValidator(address _privateValidator, uint256 deadline)')
 const  UPDATE_VALIDATOR_PERMIT_TYPE_HASH = "0x79c473821b1882439e653292df5add05615ab1a78b695620f6cf37ab0fb6dbbc";
 
-const SAVING_PRIVATE_DATA_FEE = 250000000000000;
+const SAVING_PRIVATE_DATA_FEE = 300000000000000;
 
 const hre = require("hardhat");
 const { ethers } = require("ethers");
@@ -208,11 +208,10 @@ async function testTreasury(){
 	console.log("num:",num);
 	let rule = await treasury.rules(num-1);
 	console.log("rule:",rule);
-/*
+
 	let ethResp = await treasury.withdrawETH("0xB1799E2ccB10E4a8386E17474363A2BE8e33cDfb", ethers.BigNumber.from("1000000000000000000"));
 	ethResp.wait(1);
-	console.log("withdraw 1 ETH finish");
-*/
+	console.log("withdraw 1 ETH finish, resp:",ethResp);
 }
 
 async function makeSignature(message) {

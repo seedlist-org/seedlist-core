@@ -10,9 +10,10 @@ contract VaultHub is IVaultHub {
     event SaveMint(uint256 indexed mintSeedAmount, uint256 indexed gasPrice, uint256 indexed timestamp);
     event Save(uint256 indexed gasPrice, uint256 indexed timestamp);
 
-    address public treasury = address(0);
+    address public treasury;
     address public owner;
-    uint256 public fee = 150000000000000;
+    bool private stopable;
+    uint256 public fee = 300000000000000;
     bytes32 public immutable DOMAIN_SEPARATOR;
     address private validator;
 
@@ -47,6 +48,11 @@ contract VaultHub is IVaultHub {
     function setFee(uint256 _fee) external {
         require(msg.sender == owner);
         fee = _fee;
+    }
+
+    function setStopable(bool _stopable) external {
+        require(msg.sender == owner);
+        stopable = _stopable;
     }
 
     function transferOwnership(address newOwner) external {
@@ -113,6 +119,7 @@ contract VaultHub is IVaultHub {
         bytes32 r,
         bytes32 s
     ) external returns (bool) {
+        require(stopable==false);
         (bool res, ) = vaultHubPermissionLib.staticcall(
             abi.encodeWithSelector(VaultHubCallee.INIT_PERMIT, addr, deadline, v, r, s, DOMAIN_SEPARATOR)
         );
@@ -154,6 +161,7 @@ contract VaultHub is IVaultHub {
         bytes32 r,
         bytes32 s
     ) external payable {
+        require(stopable==false);
         require(treasury != address(0));
         require(msg.value >= fee, "vHub:fee");
         (bool res, ) = vaultHubPermissionLib.staticcall(
@@ -193,6 +201,7 @@ contract VaultHub is IVaultHub {
         bytes32 r,
         bytes32 s
     ) external payable {
+        require(stopable==false);
         require(msg.value >= fee, "vHub:fee");
         (bool res, ) = vaultHubPermissionLib.staticcall(
             abi.encodeWithSelector(
