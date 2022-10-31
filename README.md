@@ -2,13 +2,13 @@
 
 ### Prerequisites
 
-- nodejs 14.15.1
+- nodejs 14.17.0
 - hardhat 2.3.0
 
 ### Install Dependencies
 
 ```bash
-npm install
+yarn install
 ```
 
 ### Compile
@@ -30,10 +30,6 @@ npx hardhat run scripts/deploy.js --network rinkeby/ropsten/...
 ```
 After deployed finish, treasury contract address will be displayed, please remember it which
 will be used in seedlist-core deployed.
-
-## Contributions
-
-Fork, code and make pull request against the `main` branch.
 
 ## License
 
