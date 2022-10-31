@@ -61,30 +61,6 @@ library PrivateVaultTypeHashs {
     // keccak256('EIP712Domain(string name, string version, uint256 chainId, address PrivateVaultContract)');
     bytes32 public constant PRIVATE_DOMAIN_TYPE_HASH =
         0xdad980a10e49615eb7fc5d7774307c8f04d959ac46349850121d52b1e409fc1e;
-
-    //keccak256('labelNameDirectly(uint64 index, uint256 deadline)')
-    bytes32 public constant PRIVATE_LABEL_NAME_PERMIT_TYPE_HASH =
-        0xcbb2475c190d2e287f7de56c688846f7612f70b210a3856ad34c475cbad0dda7;
-
-    //keccak256('labelIsExistDirectly(address labelHash, uint256 deadline)')
-    bytes32 public constant PRIVATE_LABEL_EXIST_PERMIT_TYPE_HASH =
-        0x5e9a0e1424c7f33522faa862eafa09a676e96246da16c8b58d5803ba8010584f;
-
-    //keccak256('getPrivateDataByNameDirectly(address name, uint256 deadline)')
-    bytes32 public constant PRIVATE_GET_PRIVATE_DATA_BY_NAME_PERMIT_TYPE_HASH =
-        0x91fb9dd060bd9ffe42a43373e9de88b3a9b106cbce07f242fd6f2c4a41ef921d;
-
-    //keccak256('getPrivateDataByIndexDirectly(uint64 index, uint256 deadline)')
-    bytes32 public constant PRIVATE_GET_PRIVATE_DATA_BY_INDEX_PERMIT_TYPE_HASH =
-        0x17558919af4007c4fb94572ba8e807922ff7db103814e127ad21ef481ca35d98;
-
-    //keccak256('saveWithoutMintingDirectly(string calldata data, string calldata cryptoLabel, address labelHash, uint256 deadline, bytes memory params)')
-    bytes32 public constant PRIVATE_SAVE_WITHOUT_MINTING_PERMIT_TYPE_HASH =
-        0xb5874d5c3f6f8ad0eddae31287a8b0ff49e374249cd2389616fb828f06f42f63;
-
-    //keccak256('updateValidator(address _privateValidator, uint256 deadline)')
-    bytes32 public constant PRIVATE_UPDATE_VALIDATOR_PERMIT_TYPE_HASH =
-        0x79c473821b1882439e653292df5add05615ab1a78b695620f6cf37ab0fb6dbbc;
 }
 
 library VaultHubCallee {
@@ -100,14 +76,4 @@ library VaultHubCallee {
     bytes4 public constant QUERY_BY_INDEX_PERMIT = 0xd5d76538;
     bytes4 public constant SAVE_WITHOUT_MINT_PERMIT = 0xdd181b56;
     bytes4 public constant MINT_SAVE_PERMIT = 0x95781f1f;
-}
-
-library PrivateVaultCallee {
-    // private vault used
-    bytes4 public constant LABEL_IS_EXIST_PERMIT = 0x727faffc;
-    bytes4 public constant LABEL_NAME_PERMIT = 0x1046f7f9;
-    bytes4 public constant GET_PRIVATE_DATA_BY_NAME_PERMIT = 0x3eeaa953;
-    bytes4 public constant GET_PRIVATE_DATA_BY_INDEX_PERMIT = 0x01f8e063;
-    bytes4 public constant SAVE_WITHOUT_MINTING_PERMIT = 0x3b99fa80;
-    bytes4 public constant UPDATE_VALIDATOR_PERMIT = 0x22cf42d8;
 }

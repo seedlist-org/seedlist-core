@@ -1,15 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.12;
-import "../../interfaces/vaults/IPrivateVault.sol";
-import { PrivateVaultTypeHashs, PrivateVaultCallee } from "../../libraries/Constants.sol";
-import "../../interfaces/validator/IValidator.sol";
+import {PrivateVaultTypeHashs} from "../../libraries/Constants.sol";
 
-contract PrivateVault is IPrivateVaultHub {
+contract PrivateVault {
     address private signer;
-    address private validator;
     address public caller;
 
-    address private permissionLib;
     // Each vault can only participate in the mint seed behavior once
     bool public minted;
 
@@ -38,9 +34,7 @@ contract PrivateVault is IPrivateVaultHub {
 
     constructor(
         address _signer,
-        address _caller,
-        address _validator,
-        address _permissionLib
+        address _caller
     ) {
         uint256 chainId;
         assembly {
@@ -58,34 +52,8 @@ contract PrivateVault is IPrivateVaultHub {
 
         signer = _signer;
         caller = _caller;
-        validator = _validator;
-        permissionLib = _permissionLib;
         total = 0;
         minted = false;
-    }
-
-    function updateValidator(
-        address _privateValidator,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external {
-        (bool res, ) = permissionLib.staticcall(
-            abi.encodeWithSelector(
-                PrivateVaultCallee.UPDATE_VALIDATOR_PERMIT,
-                signer,
-                _privateValidator,
-                deadline,
-                v,
-                r,
-                s,
-                DOMAIN_SEPARATOR
-            )
-        );
-        require(res == true, "vault:update");
-
-        privateValidator = _privateValidator;
     }
 
     //cryptoLabel is encrypt message from Label value
@@ -122,72 +90,7 @@ contract PrivateVault is IPrivateVaultHub {
         labelExist[labelHash] = true;
     }
 
-    function saveWithoutMintingDirectly(
-        string calldata data,
-        string calldata cryptoLabel,
-        address labelHash,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s,
-        bytes memory params
-    ) external {
-        require(IValidator(validator).isValid(params) == true, "vault:unpass");
-        if (privateValidator != address(0)) {
-            require(IValidator(privateValidator).isValid(params) == true);
-        }
-        (bool res, ) = permissionLib.staticcall(
-            abi.encodeWithSelector(
-                PrivateVaultCallee.SAVE_WITHOUT_MINTING_PERMIT,
-                signer,
-                data,
-                cryptoLabel,
-                params,
-                labelHash,
-                deadline,
-                v,
-                r,
-                s,
-                DOMAIN_SEPARATOR
-            )
-        );
-        require(res == true);
-
-        //label was unused
-        require(labelExist[labelHash] == false, "vault:exist");
-        store[labelHash] = data;
-        labels[total] = labelHash;
-        hashToLabel[labelHash] = cryptoLabel;
-        total++;
-        labelExist[labelHash] = true;
-    }
-
     function getPrivateDataByIndex(uint64 index) external view auth returns (string memory) {
-        require(total > index, "vault:overflow");
-        return store[labels[index]];
-    }
-
-    function getPrivateDataByIndexDirectly(
-        uint64 index,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external view returns (string memory) {
-        (bool res, ) = permissionLib.staticcall(
-            abi.encodeWithSelector(
-                PrivateVaultCallee.GET_PRIVATE_DATA_BY_INDEX_PERMIT,
-                signer,
-                index,
-                deadline,
-                v,
-                r,
-                s,
-                DOMAIN_SEPARATOR
-            )
-        );
-        require(res == true);
-
         require(total > index, "vault:overflow");
         return store[labels[index]];
     }
@@ -198,58 +101,7 @@ contract PrivateVault is IPrivateVaultHub {
         return store[name];
     }
 
-    function getPrivateDataByNameDirectly(
-        address name,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external view returns (string memory) {
-        (bool res, ) = permissionLib.staticcall(
-            abi.encodeWithSelector(
-                PrivateVaultCallee.GET_PRIVATE_DATA_BY_NAME_PERMIT,
-                signer,
-                name,
-                deadline,
-                v,
-                r,
-                s,
-                DOMAIN_SEPARATOR
-            )
-        );
-        require(res == true);
-
-        require(labelExist[name] == true, "vaule:no exist");
-
-        return store[name];
-    }
-
     function labelName(uint64 index) external view auth returns (string memory) {
-        require(index < total);
-        return hashToLabel[labels[index]];
-    }
-
-    function labelNameDirectly(
-        uint64 index,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external view returns (string memory) {
-        (bool res, ) = permissionLib.staticcall(
-            abi.encodeWithSelector(
-                PrivateVaultCallee.LABEL_NAME_PERMIT,
-                signer,
-                index,
-                deadline,
-                v,
-                r,
-                s,
-                DOMAIN_SEPARATOR
-            )
-        );
-        require(res == true);
-
         require(index < total);
         return hashToLabel[labels[index]];
     }
@@ -257,28 +109,5 @@ contract PrivateVault is IPrivateVaultHub {
     function labelIsExist(address labelHash) external view auth returns (bool) {
         bool exist = labelExist[labelHash];
         return exist;
-    }
-
-    function labelIsExistDirectly(
-        address labelHash,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external view returns (bool) {
-        (bool res, ) = permissionLib.staticcall(
-            abi.encodeWithSelector(
-                PrivateVaultCallee.LABEL_IS_EXIST_PERMIT,
-                signer,
-                labelHash,
-                deadline,
-                v,
-                r,
-                s,
-                DOMAIN_SEPARATOR
-            )
-        );
-        require(res == true);
-        return labelExist[labelHash];
     }
 }

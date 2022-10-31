@@ -15,15 +15,11 @@ contract VaultHub is IVaultHub {
     bool private stopable;
     uint256 public fee = 300000000000000;
     bytes32 public immutable DOMAIN_SEPARATOR;
-    address private validator;
 
     address public immutable vaultHubPermissionLib;
-    address public immutable privateVaultPermissionLib;
 
     constructor(
-        address _validator,
-        address _vaultHubPermissionLib,
-        address _privateVaultPermissionLib
+        address _vaultHubPermissionLib
     ) {
         uint256 chainId;
         assembly {
@@ -40,9 +36,7 @@ contract VaultHub is IVaultHub {
         );
 
         owner = msg.sender;
-        validator = _validator;
         vaultHubPermissionLib = _vaultHubPermissionLib;
-        privateVaultPermissionLib = _privateVaultPermissionLib;
     }
 
     function setFee(uint256 _fee) external {
@@ -99,7 +93,7 @@ contract VaultHub is IVaultHub {
         bytes32 salt = keccak256(abi.encodePacked(addr));
         bytes memory bytecode = abi.encodePacked(
             type(PrivateVault).creationCode,
-            abi.encode(addr, this, validator, privateVaultPermissionLib)
+            abi.encode(addr, this)
         );
 
         //Calculate the address of the private vault, record it as vaultAddr
@@ -128,7 +122,7 @@ contract VaultHub is IVaultHub {
         bytes32 salt = keccak256(abi.encodePacked(addr));
         bytes memory bytecode = abi.encodePacked(
             type(PrivateVault).creationCode,
-            abi.encode(addr, this, validator, privateVaultPermissionLib)
+            abi.encode(addr, this)
         );
 
         (bool done, ) = _vaultHasRegister(addr);
