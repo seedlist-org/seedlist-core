@@ -38,11 +38,11 @@ module.exports = {
         ],
       },
   networks: {
-    rinkeby: {
+    goerli: {
       url: `${infura_url}`,
       accounts: [`${privkey}`],
 	  gas: 21000000,
-	  gasPrice: 8000000000
+	  gasPrice: "auto"
     },
 	  matic: {
 		  url: `${polygon_url}`,
