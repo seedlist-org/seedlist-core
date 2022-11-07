@@ -3,7 +3,7 @@ require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-etherscan");
 
 //.secrets format: { "privkey":"....", "alchemyapikey":"...." }
-const { privkey, infura_url, etherscan_apikey,mainnet_url,polygon_url, polygonscan_apikey } = require("./.secrets.json");
+const { privkey, privkey1, privkey2, infura_url, etherscan_apikey,mainnet_url,polygon_url, polygonscan_apikey } = require("./.secrets.json");
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -34,11 +34,21 @@ module.exports = {
 	                    runs:10
                     }
                 },
-            }
+            },
+	        {
+	        	version:"0.4.20",
+		        settings:{
+			        evmVersion:"istanbul",
+			        optimizer:{
+				        enabled:true,
+				        runs:10
+			        }
+		        },
+	        }
         ],
       },
-  networks: {
-    goerli: {
+	networks: {
+		goerli: {
       url: `${infura_url}`,
       accounts: [`${privkey}`],
 	  gas: 21000000,
@@ -59,7 +69,7 @@ module.exports = {
 	  },
 	  yuanma: {
 		  url: "http://localhost:8501",
-		  accounts: [`${privkey}`]
+		  accounts: [`${privkey}`,`${privkey1}`, `${privkey2}`]
 	  },
 	  arbitrum:{
         url: "https://rinkeby.arbitrum.io/rpc",
